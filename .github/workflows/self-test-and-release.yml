@@ -1,0 +1,41 @@
+# Created using https://github.com/aws-samples/aws-codeguru-reviewer-cicd-cdk-sample
+name: Self-test and release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+    id-token: write
+    contents: read
+    security-events: write 
+
+jobs:
+  build:
+    name: Build, self-test, release
+    runs-on: ubuntu-latest
+    steps:    
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Build project
+      run: ./gradlew clean installDist distZip
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      continue-on-error: true
+      id: iam-role
+      with:
+        role-to-assume: arn:aws:iam::048169001733:role/GuruGitHubCICDRole
+        aws-region: us-west-2
+
+    - name: Self Test
+      if: steps.iam-role.outcome == 'success'
+      run: |
+        ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli -r . -s src/main/java -b build/libs -c HEAD^:HEAD

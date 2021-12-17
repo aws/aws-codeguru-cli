@@ -69,6 +69,10 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
     implementation 'org.apache.logging.log4j:log4j-core:2.16.0'
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    implementation 'org.slf4j:slf4j-api:2.0.0-alpha5'
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
+    implementation 'org.slf4j:slf4j-log4j12:2.0.0-alpha5'
 
     // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation 'org.commonmark:commonmark:0.18.1'
@@ -89,7 +93,6 @@ dependencies {
     // https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter
     testImplementation 'org.mockito:mockito-junit-jupiter:4.2.0'
 }
-
 
 /*
  Specifies that JUnit Platform (a.k.a. JUnit 5) should be used to execute tests.
