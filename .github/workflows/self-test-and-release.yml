@@ -38,4 +38,4 @@ jobs:
     - name: Self Test
       if: steps.iam-role.outcome == 'success'
       run: |
-        ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli -r . -s src/main/java -b build/libs -c HEAD^:HEAD --no-prompt
+        ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r . -s src/main/java -b build/libs -c HEAD^:HEAD --no-prompt
