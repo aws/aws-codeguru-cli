@@ -41,7 +41,7 @@ jobs:
       uses: aws-actions/codeguru-reviewer@v1.1
       continue-on-error: false
       with:          
-        s3_bucket: 	codeguru-reviewer-github-profiler-demo-048169001733-uw2
+        s3_bucket: codeguru-reviewer-build-artifacts-048169001733-us-west-2
         build_path: ./build/libs
 
     - name: Upload review result
