@@ -59,6 +59,7 @@ public final class AssociationAdapter {
                       .withFalseInput("n")
                       .read("Do you want to create a new S3 bucket: " + bucketName, bucketName);
             if (doPackageScan) {
+                Log.info("Creating new bucket: %s", bucketName);
                 config.getS3Client().createBucket(new CreateBucketRequest(bucketName));
             } else {
                 throw new GuruCliException(ErrorCodes.USER_ABORT, "CodeGuru needs an S3 bucket to continue.");
