@@ -4,7 +4,6 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import com.google.common.annotations.VisibleForTesting;
 import lombok.val;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -30,7 +29,6 @@ public final class GitAdapter {
         return tryGetMetaData(config, pathToRepo.toAbsolutePath().normalize().resolve(".git"));
     }
 
-    @VisibleForTesting
     @Nullable
     protected static GitMetaData tryGetMetaData(final Configuration config, final Path gitDir) {
         if (!gitDir.toFile().isDirectory()) {

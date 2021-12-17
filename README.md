@@ -1,7 +1,6 @@
-# CodeGuru CLI Wrapper
-Simple CLI wrapper for CodeGuru reviewer. Prototype for use with HappyTrails.
-
-For up-to-date information see [the wiki](https://w.amazon.com/bin/view/AWS/CodeGuru/Reviewer/Brazil/).
+# CodeGuru Reviewer CLI Wrapper
+Simple CLI wrapper for CodeGuru reviewer that provides a one-line command to scan a local clone of a repository and
+receive results. 
 
 ### Before you start
 
@@ -52,5 +51,13 @@ You can use the `--profile` and `--region` options to run with different credent
 If you want to just analyze the last commit, try the `-c` option:
 ```bash
 ./build/bin/gurureviewer.sh -r . -s src/main -b build/private/gradle/classes/java/main -c HEAD^:HEAD
+```
+
+### Build from Source
+
+To build the project, you need Java 8 or later. Checkout this repository and run:
+```
+./gradlew installDist
+
 ```
 

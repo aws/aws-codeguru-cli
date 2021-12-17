@@ -21,6 +21,8 @@ plugins {
     // Checkstyle for style checks and reports on Java source files. Read more at:
     // https://docs.gradle.org/current/userguide/checkstyle_plugin.html
     id 'checkstyle'
+
+    id 'application'
 }
 
 // SpotBugs for quality checks and reports of source files. Read more at:
@@ -40,6 +42,12 @@ repositories {
     mavenCentral()
 }
 
+defaultTasks('installDist')
+
+application {
+    mainClass = 'com.amazonaws.gurureviewercli.Main'
+}
+
 dependencies {
     // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk
     implementation 'com.amazonaws:aws-java-sdk:1.12.129'
@@ -57,7 +65,7 @@ dependencies {
     implementation 'com.beust:jcommander:1.81'
 
     // https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit
-    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:4.7.0.201704051617-r'
 
     // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
     implementation 'org.apache.logging.log4j:log4j-core:2.16.0'
@@ -67,6 +75,8 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.beryx/text-io
     implementation 'org.beryx:text-io:3.4.1'
+
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
 	compileOnly 'org.projectlombok:lombok:1.18.22'
 	annotationProcessor 'org.projectlombok:lombok:1.18.22'
@@ -78,7 +88,6 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
     // https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter
     testImplementation 'org.mockito:mockito-junit-jupiter:4.2.0'
-
 }
 
 
