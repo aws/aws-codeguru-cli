@@ -1,0 +1,62 @@
+[ {
+  "FilePath" : "src/main/java/com/amazonaws/gurureviewercli/Main.java",
+  "RecommendationId" : "1509b96226f77f1d3bad3f53c42f56c09ce16ac1f3713d7007c3a6871ea71d5d",
+  "StartLine" : 161,
+  "EndLine" : 161,
+  "Description" : "**Problem**: While wrapping the caught exception into a custom one, information about the caught exception is being lost, including information about the stack trace of the exception.\n\n**Fix**: If the caught exception object does not contain sensitive information, consider passing it as the \"rootCause\" or inner exception parameter to the constructor of the new exception before throwing the new exception. (Note that not all exception constructors support inner exceptions. Use a wrapper exception that supports inner exceptions.) \n[Learn more](https://www.ibm.com/support/pages/best-practice-catching-and-re-throwing-java-exceptions)\nSimilar issue at line numbers 166.",
+  "RecommendationCategory" : "JavaBestPractices",
+  "RuleMetadata" : {
+    "RuleId" : "java/throw-exception-with-trace@v1.0",
+    "RuleName" : "Stack trace not included in re-thrown exception",
+    "ShortDescription" : "When re-throwing an exception, make sure to include the stack trace.",
+    "LongDescription" : "When re-throwing an exception, make sure to include the stack trace. Otherwise pertinent debug information is lost.",
+    "RuleTags" : [ "cwe-755", "java" ]
+  },
+  "Severity" : "Medium"
+}, {
+  "FilePath" : "src/main/java/com/amazonaws/gurureviewercli/Main.java",
+  "RecommendationId" : "4d2c43618a2dac129818bef77093730e84a4e139eef3f0166334657503ecd88d",
+  "StartLine" : 154,
+  "EndLine" : 154,
+  "Description" : "AWS Region is set using a `String`. To explicitly set a publicly available region, we recommend that you use the [Regions](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/index.html?com/amazonaws/regions/Regions.html) enum.\n\n[Learn more](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/java-dg-region-selection.html#region-selection-choose-region)",
+  "RecommendationCategory" : "AWSBestPractices",
+  "RuleMetadata" : {
+    "RuleId" : "java/aws-region-enumeration@v1.0",
+    "RuleName" : "Use an enum to specify an AWS Region",
+    "ShortDescription" : "To minimize the risk of error, use an enum instead of a string to specify an AWS Region.",
+    "LongDescription" : "Use a `Regions` enum instead of a string to specify an AWS Region. This can minimize the risk of error.",
+    "RuleTags" : [ "aws", "java" ]
+  },
+  "Severity" : "Medium"
+}, {
+  "FilePath" : "src/main/java/com/amazonaws/gurureviewercli/Main.java",
+  "RecommendationId" : "5ea0fef84e3623ae3c98ee10e25ab39899f1bfbe1a99e7ec374c31ae58d21cfe",
+  "StartLine" : 194,
+  "EndLine" : 194,
+  "Description" : "AWS Region is set using a `String`. To explicitly set a publicly available region, we recommend that you use the [Regions](https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/index.html?com/amazonaws/regions/Regions.html) enum.\n\n[Learn more](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/java-dg-region-selection.html#region-selection-choose-region)",
+  "RecommendationCategory" : "AWSBestPractices",
+  "RuleMetadata" : {
+    "RuleId" : "java/aws-region-enumeration@v1.0",
+    "RuleName" : "Use an enum to specify an AWS Region",
+    "ShortDescription" : "To minimize the risk of error, use an enum instead of a string to specify an AWS Region.",
+    "LongDescription" : "Use a `Regions` enum instead of a string to specify an AWS Region. This can minimize the risk of error.",
+    "RuleTags" : [ "aws", "java" ]
+  },
+  "Severity" : "Medium"
+}, {
+  "FilePath" : "src/main/java/com/amazonaws/gurureviewercli/adapter/ScanAdapter.java",
+  "RecommendationId" : "ce6d28872c691f82a95099dd2e04eff0da58f23d13162c8b0421a0c46e03d163",
+  "StartLine" : 86,
+  "EndLine" : 86,
+  "Description" : "**Problem**: InterruptedException is ignored. This can delay thread shutdown and clear the thread’s interrupt status. Only code that implements a thread’s interruption policy can swallow an interruption request.\n\n**Fix**: Rethrow the InterruptedException or reinterrupt the current thread using *Thread.currentThread().interrupt()* so that higher-level interrupt handlers can function correctly.\n If you are wrapping the InterruptedException inside a RuntimeException, call *Thread.currentThread().interrupt()* before throwing the RuntimeException.\n\nLearn more about [interrupts](https://docs.oracle.com/javase/tutorial/essential/concurrency/interrupt.html) and [dealing with InterruptedException](https://www.ibm.com/developerworks/java/library/j-jtp05236/index.html?ca=drs-#N10187)\n",
+  "RecommendationCategory" : "JavaBestPractices",
+  "RuleMetadata" : { }
+}, {
+  "FilePath" : ".",
+  "RecommendationId" : "security-1f1a4dd101b245a24f50b51d8f45862b8db66e1fee0aef4a2d0be46",
+  "StartLine" : 1,
+  "EndLine" : 1,
+  "Description" : "New security detectors are periodically added, so consider regular security-analysis to keep your code secure.\nThe build artifacts for some of your source code are missing. Only source code that was uploaded with its accompanying build artifact files was analyzed for security recommendations. All of your source code was analyzed for source code quality recommendations because code quality analysis doesn’t require build artifacts.",
+  "RecommendationCategory" : "CodeMaintenanceIssues",
+  "RuleMetadata" : { }
+} ]
