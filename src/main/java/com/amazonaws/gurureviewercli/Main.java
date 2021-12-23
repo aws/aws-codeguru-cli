@@ -112,8 +112,7 @@ public class Main {
             val outputPath = Paths.get(main.outputDir);
             if (!outputPath.toFile().exists()) {
                 if (outputPath.toFile().mkdirs()) {
-                    textIO.getTextTerminal().printf("Directory %s already exists; previous results may be overriden.",
-                                                    outputPath);
+                    Log.println("Directory %s already exists; previous results may be overriden.%n", outputPath);
                 }
             }
             ResultsAdapter.saveResults(outputPath, results, scanMetaData);

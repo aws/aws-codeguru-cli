@@ -46,6 +46,7 @@ jobs:
 
     - name: Upload review result
       if: steps.iam-role.outcome == 'success' && steps.codeguru.outcome == 'success'
+      continue-on-error: true
       uses: github/codeql-action/upload-sarif@v1
       with:
         sarif_file: codeguru-results.sarif.json
