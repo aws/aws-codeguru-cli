@@ -45,62 +45,52 @@ repositories {
 defaultTasks('installDist')
 
 version = '0.0.1'
+jar.archiveName = "${jar.baseName}.${jar.extension}"
+
+distributions {
+  main {
+    version = '' // don't include the version in the zip file name.
+  }
+}
+
 application {
     mainClass = 'com.amazonaws.gurureviewercli.Main'
 }
 
 dependencies {
-    // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk
-    implementation 'com.amazonaws:aws-java-sdk:1.12.129'
-    // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-s3
     implementation 'com.amazonaws:aws-java-sdk-s3:1.12.129'
-    // https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-codegurureviewer
+    implementation 'com.amazonaws:aws-java-sdk-sts:1.12.129'
     implementation 'com.amazonaws:aws-java-sdk-codegurureviewer:1.12.129'
 
-    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
-    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
     implementation 'com.fasterxml.jackson.core:jackson-core:2.13.0'
 
-    // https://mvnrepository.com/artifact/com.beust/jcommander
     implementation 'com.beust:jcommander:1.81'
 
-    // https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit
     implementation 'org.eclipse.jgit:org.eclipse.jgit:4.7.0.201704051617-r'
 
-    // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
     implementation 'org.apache.logging.log4j:log4j-core:2.16.0'
-    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    implementation 'org.apache.logging.log4j:log4j-1.2-api:2.17.0'
     implementation 'org.slf4j:slf4j-api:2.0.0-alpha5'
-    // https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
     implementation 'org.slf4j:slf4j-log4j12:2.0.0-alpha5'
 
-    // https://mvnrepository.com/artifact/org.commonmark/commonmark
     implementation 'org.commonmark:commonmark:0.18.1'
 
-    // https://mvnrepository.com/artifact/org.beryx/text-io
     implementation 'org.beryx:text-io:3.4.1'
 
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
-	compileOnly 'org.projectlombok:lombok:1.18.22'
-	annotationProcessor 'org.projectlombok:lombok:1.18.22'
-	
-	testCompileOnly 'org.projectlombok:lombok:1.18.22'
-	testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+    
+    testCompileOnly 'org.projectlombok:lombok:1.18.22'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
-    // https://mvnrepository.com/artifact/org.mockito/mockito-junit-jupiter
     testImplementation 'org.mockito:mockito-junit-jupiter:4.2.0'
 }
 
-/*
- Specifies that JUnit Platform (a.k.a. JUnit 5) should be used to execute tests.
-
- For mixed JUnit 4 and 5 tests, add 'JUnit-4-12-migration = 5.x;' to
- test-dependencies in Config.
-*/
 test {
     useJUnitPlatform()
 }

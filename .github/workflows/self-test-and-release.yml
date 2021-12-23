@@ -35,10 +35,10 @@ jobs:
         role-to-assume: arn:aws:iam::048169001733:role/GuruGitHubCICDRole
         aws-region: us-west-2
 
-    # - name: Self Test
-    #   if: steps.iam-role.outcome == 'success'
-    #   run: |
-    #     ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r . -s src/main/java -b build/libs -c HEAD^:HEAD --no-prompt
+    - name: Self Test
+      if: steps.iam-role.outcome == 'success'
+      run: |
+        ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r . -s src/main/java -b build/libs -c HEAD^:HEAD --no-prompt
 
     - name: Get Release Version
       run: |
@@ -62,6 +62,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} 
-        asset_path: ./build/distributions/aws-codeguru-cli-${{ steps.version.outputs.TAG_NAME }}.zip
+        asset_path: ./build/distributions/aws-codeguru-cli.zip
         asset_name: aws-codeguru-cli.zip
         asset_content_type: application/zip

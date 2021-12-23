@@ -10,8 +10,26 @@ The credentials must have permissions to use CodeGuru Reviewer and S3.
 
 ### Download the CLI and scan an Example
 
-TODO ... after we have the release github action
+You can download the [aws-codeguru-cli](releases/download/latest/aws-codeguru-cli.zip) from the releases section.
+Download the latest version and add it to your `PATH`:
+```
+curl -OL https://github.com/martinschaef/aws-codeguru-cli/releases/download/latest/aws-codeguru-cli.zip
+unzip aws-codeguru-cli.zip
+export PATH=$PATH:./aws-codeguru-cli/bin
+```
 
+Now, lets download an example project (requires Maven):
+```
+git clone https://github.com/aws-samples/amazon-codeguru-reviewer-sample-app
+cd amazon-codeguru-reviewer-sample-app
+mvn clean compile
+```
+After compiling, we can run CodeGuru with:
+```
+aws-codeguru-cli -r ./ -b target/classes -s src  
+```
+where `-r .` specifies that the *repository* that we want to analyze is the current directory `./`. The option `-b target/classses` states that the build artifacts are located under `./target/classes` and `-s` says that we only want to analyze source files that are
+located under `./src`.
 
 
 ### Running from CI/CD
