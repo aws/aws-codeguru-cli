@@ -46,12 +46,7 @@ defaultTasks('installDist')
 
 version = '0.0.1'
 jar.archiveName = "${jar.baseName}.${jar.extension}"
-
-distributions {
-  main {
-    version = '' // don't include the version in the zip file name.
-  }
-}
+distZip.archiveName = "${jar.baseName}.zip"
 
 application {
     mainClass = 'com.amazonaws.gurureviewercli.Main'

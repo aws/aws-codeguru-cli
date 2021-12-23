@@ -35,10 +35,10 @@ jobs:
         role-to-assume: arn:aws:iam::048169001733:role/GuruGitHubCICDRole
         aws-region: us-west-2
 
-    - name: Self Test
-      if: steps.iam-role.outcome == 'success'
-      run: |
-        ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r . -s src/main/java -b build/libs -c HEAD^:HEAD --no-prompt
+    # - name: Self Test
+    #   if: steps.iam-role.outcome == 'success'
+    #   run: |
+    #     ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r . -s src/main/java -b build/libs -c HEAD^:HEAD --no-prompt
 
     - name: Get Release Version
       run: |
