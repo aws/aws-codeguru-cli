@@ -34,13 +34,7 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder
 import com.amazonaws.services.securitytoken.model.GetCallerIdentityRequest;
 
 public class Main {
-    private static final String FES_ENDPOINT_PATTERN_PROD = "https://codeguru-reviewer.%s.amazonaws.com";
-    private static final String FES_ENDPOINT_PATTERN_NON_PROD = "https://%s.%s.fe-service.guru.aws.a2z.com";
-
-    @Parameter(names = {"--stage"},
-               description = "Stage where CodeGuru Reviewer will run.",
-               required = false)
-    private String stage = "prod";
+    private static final String FES_ENDPOINT_PATTERN_PROD = "https://codeguru-reviewer.%s.amazonaws.com";    
 
     @Parameter(names = {"--region"},
                description = "Region where CodeGuru Reviewer will run.",
@@ -176,12 +170,7 @@ public class Main {
     }
 
     private AmazonCodeGuruReviewer getNewGuruClient(AWSCredentialsProvider credentialsProvider) {
-        String endpoint;
-        if ("prod".equals(stage)) {
-            endpoint = String.format(FES_ENDPOINT_PATTERN_PROD, regionName);
-        } else {
-            endpoint = String.format(FES_ENDPOINT_PATTERN_NON_PROD, regionName, stage);
-        }
+        String endpoint = String.format(FES_ENDPOINT_PATTERN_PROD, regionName);
         val endpointConfig = new AwsClientBuilder.EndpointConfiguration(endpoint, regionName);
         return AmazonCodeGuruReviewerClientBuilder.standard()
                                                   .withCredentials(credentialsProvider)

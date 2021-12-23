@@ -26,10 +26,12 @@ mvn clean compile
 ```
 After compiling, we can run CodeGuru with:
 ```
-aws-codeguru-cli -r ./ -b target/classes -s src  
+aws-codeguru-cli -r ./ -b target/classes -s src -o ./output
+open output/codeguru-report.html 
 ```
 where `-r .` specifies that the *repository* that we want to analyze is the current directory `./`. The option `-b target/classses` states that the build artifacts are located under `./target/classes` and `-s` says that we only want to analyze source files that are
-located under `./src`.
+located under `./src`. The option `-o ./output` specifies where CodeGuru should write its recommendations to. By default,
+CodeGuru produces a Json and Html report.
 
 
 ### Running from CI/CD
@@ -73,10 +75,13 @@ You can use this CLI to run CodeGuru from inside your CI/CD pipeline. See [this 
 }
 ```
 
-
+Then you can run the CLI in non-interactive mode using the `--no-prompt` option. Further, you can specify a region and 
+AWS profile using the `--region` and `--profile` options as needed:
 ```
-aws-codeguru-cli --region [BUCKET REGION] --no-prompt ...
+aws-codeguru-cli --region [BUCKET REGION] --no-prompt -r ./ ...
 ```
+obtain the commit range works differently for different CI/CD providers. For example, GitHub provides the relevant
+commits via environment variables such as `${{ github.event.before }}` and `${{ github.event.after }}`.
 
 ### Build from Source
 
@@ -92,3 +97,11 @@ you can run a self-test with:
 ```
 ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli -r . -s src/main/java -b build/libs -c HEAD^:HEAD
 ```
+
+## Security
+
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+
+## License
+
+This project is licensed under the Apache-2.0 License.
