@@ -13,6 +13,7 @@ public enum ErrorCodes {
     GIT_INVALID_COMMITS("Not a valid commit"),
     GIT_EMPTY_DIFF("Diff is empty"),
     AWS_INIT_ERROR("Failed to initialize AWS API"),
+    BAD_BUCKET_NAME("CodeGuru Reviewer expects bucket names to start with codeguru-reviewer-"),
     USER_ABORT("Abort");
 
     @Getter

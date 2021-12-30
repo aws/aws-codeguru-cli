@@ -29,6 +29,7 @@ public final class ResultsAdapter {
                                    final ScanMetaData scanMetaData) throws IOException {
         val jsonFile = outputDir.resolve("recommendations.json");
         JsonUtil.storeRecommendations(results, jsonFile);
+        Log.info("Recommendations in Json format written to to:%n%s", jsonFile.normalize().toUri());
         createHtmlReport(outputDir, scanMetaData, results);
     }
 
@@ -73,6 +74,19 @@ public final class ResultsAdapter {
                     continue;
                 }
                 validFindings++;
+                String lineMsg;
+                if (!recommendation.getStartLine().equals(recommendation.getEndLine())
+                    && recommendation.getEndLine() != null) {
+                    lineMsg = String.format("### In: [%s](%s) L%d %n",
+                                            filePath, filePath.toUri(),
+                                            recommendation.getStartLine());
+                } else {
+                    lineMsg = String.format("### In: [%s](%s) L%d - L%d %n",
+                                            filePath, filePath.toUri(),
+                                            recommendation.getStartLine(),
+                                            recommendation.getEndLine());
+                }
+
                 Node document = parser.parse(String.format("### In: [%s](%s) L%d %n",
                                                            filePath, filePath.toUri(),
                                                            recommendation.getStartLine()));
@@ -85,7 +99,8 @@ public final class ResultsAdapter {
 
                 if (recommendation.getRuleMetadata() != null && recommendation.getRuleMetadata().getRuleId() != null) {
                     val manifest = recommendation.getRuleMetadata();
-                    writer.write(String.format("<p><strong>Rule:</strong> %s<p/>", manifest.getRuleId()));
+                    writer.write(String.format("<p><strong>Rule ID:</strong> %s<p/>", manifest.getRuleId()));
+                    writer.write(String.format("<p><strong>Rule Name:</strong> %s<p/>", manifest.getRuleName()));
                     document = parser.parse("**Description:** " + manifest.getLongDescription());
                     writer.write(renderer.render(document));
                     if (manifest.getRuleTags() != null && !manifest.getRuleTags().isEmpty()) {
@@ -101,7 +116,7 @@ public final class ResultsAdapter {
             writer.write("</body>\n");
             writer.write("</html>\n");
         }
-        Log.info("Report with %d recommendations written to: %s", validFindings, htmlFile.normalize().toUri());
+        Log.info("Report with %d recommendations written to:%n%s", validFindings, htmlFile.normalize().toUri());
     }
 
     private static void sortByFileName(final List<RecommendationSummary> recommendations) {

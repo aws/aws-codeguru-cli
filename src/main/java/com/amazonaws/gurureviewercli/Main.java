@@ -73,6 +73,9 @@ public class Main {
                description = "Output directory.")
     private String outputDir = "./code-guru";
 
+    @Parameter(names = {"--bucket-name"},
+               description = "Optional S3 Bucket name. Bucket name has to start with 'codeguru-reviewer-'")
+    private String bucketName;
 
 
     public static void main(String[] argv) {
@@ -91,6 +94,7 @@ public class Main {
             val config = Configuration.builder()
                                       .textIO(textIO)
                                       .interactiveMode(!main.noPrompt)
+                                      .bucketName(main.bucketName)
                                       .build();
             // try to build the AWS client objects first.
             main.createAWSClients(config);

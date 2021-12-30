@@ -48,7 +48,16 @@ public final class AssociationAdapter {
     }
 
     private static RepositoryAssociation createBucketAndAssociation(final Configuration config) {
-        val bucketName = String.format(BUCKET_NAME_PATTERN, config.getAccountId(), config.getRegion());
+        final String bucketName;
+        if (config.getBucketName() != null) {
+            if (!config.getBucketName().startsWith("codeguru-reviewer-")) {
+                throw new GuruCliException(ErrorCodes.BAD_BUCKET_NAME,
+                                           config.getBucketName() + " is not a valid bucket name for CodeGuru.");
+            }
+            bucketName = config.getBucketName();
+        } else {
+            bucketName = String.format(BUCKET_NAME_PATTERN, config.getAccountId(), config.getRegion());
+        }
         if (!config.getS3Client().doesBucketExistV2(bucketName)) {
             Log.info("CodeGuru Reviewer requires an S3 bucket to upload the analysis artifacts to.");
             val doPackageScan =

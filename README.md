@@ -28,8 +28,10 @@ The credentials must have at least the following permissions:
         },
         {
             "Action": [
-                "s3:CreateBucket*",
-                "s3:GetObject*",
+                "s3:CreateBucket",
+                "s3:GetBucket*",
+                "s3:List*",
+                "s3:GetObject",
                 "s3:PutObject"
             ],
             "Resource": [
@@ -68,6 +70,8 @@ where `--repository .` specifies that the *repository* that we want to analyze i
 located under `./src`. The option `--output ./output` specifies where CodeGuru should write its recommendations to. By default,
 CodeGuru produces a Json and Html report.
 
+You can provide your own bucket name using the `--bucket-name` option. Note that, currently, CodeGuru Reviewer only
+accepts bucket names that start with the prefix `codeguru-reviewer-`.
 
 ### Running from CI/CD
 

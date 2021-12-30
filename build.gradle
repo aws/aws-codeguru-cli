@@ -67,9 +67,6 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-core:2.17.1'
     implementation 'org.slf4j:slf4j-nop:2.0.0-alpha5'
 
-    // implementation 'org.apache.logging.log4j:log4j-1.2-api:2.17.1'
-    // implementation 'org.slf4j:slf4j-log4j12:2.0.0-alpha5'
-
     // For Java 9+
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
 

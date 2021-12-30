@@ -31,6 +31,8 @@ public class Configuration {
 
     private TextIO textIO;
 
+    private String bucketName;
+
     private @Nullable
     String beforeCommit;
 
