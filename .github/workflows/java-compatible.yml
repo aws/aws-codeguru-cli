@@ -1,0 +1,32 @@
+
+name: Build with different JDKs
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+    id-token: write
+    contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ '8', '11', '16', '17' ]
+    name: Java ${{ matrix.Java }} build
+
+    steps:    
+    - uses: actions/checkout@v2
+    - name: Setup java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'temurin'
+        java-version: ${{ matrix.java }}
+    - name: Build project
+      run: ./gradlew clean installDist
+    - name: Run cli
+      run: ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli
+
