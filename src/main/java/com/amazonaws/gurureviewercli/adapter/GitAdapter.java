@@ -38,9 +38,6 @@ public final class GitAdapter {
         try (val repository = builder.setGitDir(gitDir.toFile()).findGitDir().build()) {
             val userName = repository.getConfig().getString("user", null, "email");
             val urlString = repository.getConfig().getString("remote", "origin", "url");
-            if (urlString == null) {
-                throw new GuruCliException(ErrorCodes.GIT_REMOTE_MISSING);
-            }
             val branchName = repository.getBranch();
             if (branchName == null) {
                 throw new GuruCliException(ErrorCodes.GIT_BRANCH_MISSING);

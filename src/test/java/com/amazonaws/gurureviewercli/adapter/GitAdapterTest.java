@@ -28,9 +28,10 @@ class GitAdapterTest {
     @Test
     public void test_getGitMetaData_noRemote() throws Exception {
         val repo = RESOURCE_ROOT.resolve("fresh-repo-no-remote");
-        GuruCliException ret = Assertions.assertThrows(GuruCliException.class, () ->
-            GitAdapter.tryGetMetaData(configWithoutCommits(repo), repo.resolve("git")));
-        Assertions.assertEquals(ErrorCodes.GIT_REMOTE_MISSING, ret.getErrorCode());
+        val metadata = GitAdapter.tryGetMetaData(configWithoutCommits(repo), repo.resolve("git"));
+        Assertions.assertNull(metadata.getRemoteUrl());
+        Assertions.assertNotNull(metadata.getCurrentBranch());
+        Assertions.assertEquals(repo, metadata.getRepoRoot());
     }
 
 
