@@ -68,12 +68,9 @@ public final class GitAdapter {
                 }
             }
 
-            if (validateCommits(config, repository)) {
-                metadata.setBeforeCommit(config.getBeforeCommit());
-                metadata.setAfterCommit(config.getAfterCommit());
-            } else {
-                throw new GuruCliException(ErrorCodes.GIT_INVALID_COMMITS);
-            }
+            validateCommits(config, repository);
+            metadata.setBeforeCommit(config.getBeforeCommit());
+            metadata.setAfterCommit(config.getAfterCommit());
 
             return metadata;
 
@@ -88,19 +85,24 @@ public final class GitAdapter {
         val beforeTreeIter = treeForCommitId(repo, config.getBeforeCommit());
         val afterTreeIter = treeForCommitId(repo, config.getAfterCommit());
 
-        try {
-            // Resolve git constants, such as HEAD^^ to the actual commit hash
-            config.setBeforeCommit(repo.resolve(config.getBeforeCommit()).getName());
-            config.setAfterCommit(repo.resolve(config.getAfterCommit()).getName());
-        } catch (Throwable e) {
-            throw new GuruCliException(ErrorCodes.GIT_INVALID_COMMITS);
-        }
+        // Resolve git constants, such as HEAD^^ to the actual commit hash
+        config.setBeforeCommit(resolveSha(repo, config.getBeforeCommit()));
+        config.setAfterCommit(resolveSha(repo, config.getAfterCommit()));
+
         val diffEntries = new Git(repo).diff().setOldTree(beforeTreeIter).setNewTree(afterTreeIter).call();
         if (diffEntries.isEmpty()) {
             throw new GuruCliException(ErrorCodes.GIT_EMPTY_DIFF);
         }
 
         return true;
+    }
+
+    private static String resolveSha(final Repository repo, final String commitName) {
+        try {
+            return repo.resolve(commitName).getName();
+        } catch (Throwable e) {
+            throw new GuruCliException(ErrorCodes.GIT_INVALID_COMMITS, "Invalid commit " + commitName);
+        }
     }
 
     private static CanonicalTreeParser treeForCommitId(final Repository repo, final String commitId) {

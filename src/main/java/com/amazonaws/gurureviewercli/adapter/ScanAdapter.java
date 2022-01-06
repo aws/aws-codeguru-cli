@@ -113,15 +113,15 @@ public final class ScanAdapter {
 
     private static List<RecommendationSummary> downloadResults(final AmazonCodeGuruReviewer guruFrontendService,
                                                                final String reviewARN) {
-        ListRecommendationsRequest listRequest = new ListRecommendationsRequest().withCodeReviewArn(reviewARN);
-        ListRecommendationsResult paginatedResult = guruFrontendService.listRecommendations(listRequest);
-        val recommendations = new ArrayList<RecommendationSummary>(paginatedResult.getRecommendationSummaries());
-        while (paginatedResult.getNextToken() != null) {
+        val listRequest = new ListRecommendationsRequest().withCodeReviewArn(reviewARN);
+        val recommendations = new ArrayList<RecommendationSummary>();
+        String nextToken = null;
+        do {
+            listRequest.setNextToken(nextToken);
+            ListRecommendationsResult paginatedResult = guruFrontendService.listRecommendations(listRequest);
             recommendations.addAll(paginatedResult.getRecommendationSummaries());
-            listRequest = new ListRecommendationsRequest().withCodeReviewArn(reviewARN)
-                                                          .withNextToken(paginatedResult.getNextToken());
-            paginatedResult = guruFrontendService.listRecommendations(listRequest);
-        }
+            nextToken = paginatedResult.getNextToken();
+        } while(nextToken != null);
         return recommendations;
     }
 

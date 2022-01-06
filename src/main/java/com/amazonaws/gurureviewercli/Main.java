@@ -34,7 +34,7 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder
 import com.amazonaws.services.securitytoken.model.GetCallerIdentityRequest;
 
 public class Main {
-    private static final String FES_ENDPOINT_PATTERN_PROD = "https://codeguru-reviewer.%s.amazonaws.com";    
+    private static final String REVIEWER_ENDPOINT_PATTERN = "https://codeguru-reviewer.%s.amazonaws.com";
 
     @Parameter(names = {"--region"},
                description = "Region where CodeGuru Reviewer will run.",
@@ -74,7 +74,9 @@ public class Main {
     private String outputDir = "./code-guru";
 
     @Parameter(names = {"--bucket-name"},
-               description = "Optional S3 Bucket name. Bucket name has to start with 'codeguru-reviewer-'")
+               description = "Name of S3 bucket that source and build artifacts will be uploaded to for analysis."
+                             + " The bucket name has to be prefixed with 'codeguru-reviewer-'. If no bucket name"
+                             + " is provided, the CLI will create a bucket automatically.")
     private String bucketName;
 
 
@@ -110,7 +112,7 @@ public class Main {
             val outputPath = Paths.get(main.outputDir);
             if (!outputPath.toFile().exists()) {
                 if (outputPath.toFile().mkdirs()) {
-                    Log.println("Directory %s already exists; previous results may be overriden.%n", outputPath);
+                    Log.println("Directory %s already exists; previous results may be overwritten.", outputPath);
                 }
             }
             ResultsAdapter.saveResults(outputPath, results, scanMetaData);
@@ -158,11 +160,12 @@ public class Main {
         } catch (IllegalArgumentException e) {
             // profile could not be found
             throw new GuruCliException(ErrorCodes.AWS_INIT_ERROR,
-                                       "Error accessing the provided profile. Ensure that the spelling is correct and"
+                                       "Error accessing the provided profile. " + this.profileName
+                                       + "Ensure that the spelling is correct and"
                                        + " that the role has access to CodeGuru and S3.");
         } catch (SdkClientException e) {
             throw new GuruCliException(ErrorCodes.AWS_INIT_ERROR,
-                                       "No AWS credentials found. Consider using ADA to create a named profile.");
+                                       "No AWS credentials found. Use 'aws configure' to set them up.");
         }
     }
 
@@ -174,7 +177,7 @@ public class Main {
     }
 
     private AmazonCodeGuruReviewer getNewGuruClient(AWSCredentialsProvider credentialsProvider) {
-        String endpoint = String.format(FES_ENDPOINT_PATTERN_PROD, regionName);
+        String endpoint = String.format(REVIEWER_ENDPOINT_PATTERN, regionName);
         val endpointConfig = new AwsClientBuilder.EndpointConfiguration(endpoint, regionName);
         return AmazonCodeGuruReviewerClientBuilder.standard()
                                                   .withCredentials(credentialsProvider)

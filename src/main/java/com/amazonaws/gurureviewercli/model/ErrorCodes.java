@@ -11,7 +11,7 @@ public enum ErrorCodes {
     GIT_BRANCH_MISSING("Cannot determine Git branch"),
     GIT_REMOTE_MISSING("Cannot identify Git remote URL"),
     GIT_INVALID_COMMITS("Not a valid commit"),
-    GIT_EMPTY_DIFF("Diff is empty"),
+    GIT_EMPTY_DIFF("Git Diff is empty"),
     AWS_INIT_ERROR("Failed to initialize AWS API"),
     BAD_BUCKET_NAME("CodeGuru Reviewer expects bucket names to start with codeguru-reviewer-"),
     USER_ABORT("Abort");
