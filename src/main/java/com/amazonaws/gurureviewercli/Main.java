@@ -98,6 +98,7 @@ public class Main {
                                       .interactiveMode(!main.noPrompt)
                                       .bucketName(main.bucketName)
                                       .build();
+            main.validateInitialConfig(config);
             // try to build the AWS client objects first.
             main.createAWSClients(config);
             // sanity check if repo is valid git.
@@ -136,13 +137,41 @@ public class Main {
         if (commitRange != null) {
             val commits = commitRange.split(":");
             if (commits.length != 2) {
-                throw new GuruCliException(ErrorCodes.GIT_INVALID_COMMITS);
+                throw new GuruCliException(ErrorCodes.GIT_INVALID_COMMITS,
+                                           "Invalid value for --commit-range. Use '[before commit]:[after commit]'.");
             }
             config.setBeforeCommit(commits[0]);
             config.setAfterCommit(commits[1]);
         }
 
         return GitAdapter.getGitMetatData(config, repoRoot);
+    }
+
+    private void validateInitialConfig(final Configuration config) {
+        if (config.getBucketName() != null && !config.getBucketName().startsWith("codeguru-reviewer-")) {
+            throw new GuruCliException(ErrorCodes.BAD_BUCKET_NAME,
+                                       config.getBucketName() + " is not a valid bucket name for CodeGuru.");
+        }
+        if (Paths.get(repoDir).toFile().isDirectory()) {
+            throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
+                                       repoDir + " is not a valid directory.");
+        }
+        if (this.sourceDirs != null) {
+            sourceDirs.forEach(sourceDir -> {
+                if (Paths.get(sourceDir).toFile().isDirectory()) {
+                    throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
+                                               repoDir + " is not a valid directory.");
+                }
+            });
+        }
+        if (this.buildDirs != null) {
+            buildDirs.forEach(buildDir -> {
+                if (Paths.get(buildDir).toFile().isDirectory()) {
+                    throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
+                                               repoDir + " is not a valid directory.");
+                }
+            });
+        }
     }
 
     protected void createAWSClients(final Configuration config) {

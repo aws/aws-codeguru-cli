@@ -38,7 +38,7 @@ public final class ZipUtils {
                                 zs.write(Files.readAllBytes(path));
                                 zs.closeEntry();
                             } catch (Exception e) {
-                                log.error(e);
+                                log.error("Skipping file {} because of error: {}", path, e.getMessage());
                             }
                         });
                 }
@@ -80,7 +80,7 @@ public final class ZipUtils {
                                 zs.write(Files.readAllBytes(path));
                                 zs.closeEntry();
                             } catch (Exception e) {
-                                log.error(e);
+                                log.error("Skipping file {} because of error: {}", path, e.getMessage());
                             }
                         });
                 }
