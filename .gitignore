@@ -3,3 +3,6 @@ build
 .vscode
 .guru
 code-guru
+.DS_Store
+.idea
+test-output*
