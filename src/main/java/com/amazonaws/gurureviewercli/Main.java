@@ -112,8 +112,8 @@ public class Main {
 
             val outputPath = Paths.get(main.outputDir);
             if (!outputPath.toFile().exists()) {
-                if (outputPath.toFile().mkdirs()) {
-                    Log.println("Directory %s already exists; previous results may be overwritten.", outputPath);
+                if (!outputPath.toFile().mkdirs()) {
+                    Log.error("Failed to create output directory %s.", outputPath);
                 }
             }
             ResultsAdapter.saveResults(outputPath, results, scanMetaData);
