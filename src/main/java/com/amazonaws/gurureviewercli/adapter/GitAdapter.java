@@ -33,7 +33,6 @@ public final class GitAdapter {
                               .repoRoot(pathToRepo)
                               .userName("nobody")
                               .currentBranch("unknown")
-                              .pullRequestId("0")
                               .build();
         }
         return tryGetMetaData(config, pathToRepo.toAbsolutePath().normalize().resolve(".git"));
