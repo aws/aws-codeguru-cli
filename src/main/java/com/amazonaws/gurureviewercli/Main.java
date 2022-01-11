@@ -56,14 +56,14 @@ public class Main {
                required = false)
     private boolean noPrompt;
 
-    @Parameter(names = {"--repository", "-r"},
-               description = "The directory of the git repo that should be analyzed.",
+    @Parameter(names = {"--root-dir", "-r"},
+               description = "The root directory of the project that should be analyzed.",
                required = true)
     private String repoDir;
 
     @Parameter(names = {"--src", "-s"},
                description = "Source directories to be analyzed. Can be used multiple times.")
-    private List<String> sourceDirs = Arrays.asList("./");
+    private List<String> sourceDirs;
 
     @Parameter(names = {"--build", "-b"},
                description = "Directory of all build artifacts. Can be used multiple times.")
@@ -158,14 +158,15 @@ public class Main {
                                        repoDir + " is not a valid directory.");
         }
         config.setRootDir(Paths.get(repoDir).toAbsolutePath().normalize());
-        if (this.sourceDirs != null) {
-            sourceDirs.forEach(sourceDir -> {
-                if (!Paths.get(sourceDir).toFile().isDirectory()) {
-                    throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
-                                               sourceDir + " is not a valid directory.");
-                }
-            });
+        if (this.sourceDirs == null || this.sourceDirs.isEmpty()) {
+            this.sourceDirs = Arrays.asList(repoDir);
         }
+        sourceDirs.forEach(sourceDir -> {
+            if (!Paths.get(sourceDir).toFile().isDirectory()) {
+                throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
+                                           sourceDir + " is not a valid directory.");
+            }
+        });
         if (this.buildDirs != null) {
             buildDirs.forEach(buildDir -> {
                 if (!Paths.get(buildDir).toFile().isDirectory()) {

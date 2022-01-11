@@ -63,10 +63,10 @@ mvn clean compile
 ```
 After compiling, we can run CodeGuru with:
 ```
-aws-codeguru-cli --repository ./ --build target/classes --src src --output ./output
+aws-codeguru-cli --root-dir ./ --build target/classes --src src --output ./output
 open output/codeguru-report.html 
 ```
-where `--repository .` specifies that the *repository* that we want to analyze is the current directory `./`. The option `--build target/classses` states that the build artifacts are located under `./target/classes` and `--src` says that we only want to analyze source files that are
+where `--root-dir .` specifies that the root of the project that we want to analyze. The option `--build target/classses` states that the build artifacts are located under `./target/classes` and `--src` says that we only want to analyze source files that are
 located under `./src`. The option `--output ./output` specifies where CodeGuru should write its recommendations to. By default,
 CodeGuru produces a Json and Html report.
 
