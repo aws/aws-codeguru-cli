@@ -102,7 +102,7 @@ public class Main {
             // try to build the AWS client objects first.
             main.createAWSClients(config);
 
-            String repoName = Paths.get(main.repoDir).toFile().getName();
+            String repoName = config.getRootDir().toFile().getName();
             config.setRepoName(repoName);
 
             // check if repo is valid git.
