@@ -145,7 +145,7 @@ public class Main {
             config.setAfterCommit(commits[1]);
         }
 
-        return GitAdapter.getGitMetatData(config, repoRoot);
+        return GitAdapter.getGitMetaData(config, repoRoot);
     }
 
     private void validateInitialConfig(final Configuration config) {

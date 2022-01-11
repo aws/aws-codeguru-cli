@@ -25,7 +25,7 @@ import com.amazonaws.gurureviewercli.util.Log;
 public final class GitAdapter {
 
     @Nonnull
-    public static GitMetaData getGitMetatData(final Configuration config, final Path pathToRepo) {
+    public static GitMetaData getGitMetaData(final Configuration config, final Path pathToRepo) {
         val gitDir = pathToRepo.toAbsolutePath().normalize().resolve(".git");
         if (!gitDir.toFile().isDirectory()) {
             // if the directory is not under version control, return a dummy object.
@@ -33,6 +33,7 @@ public final class GitAdapter {
                               .repoRoot(pathToRepo)
                               .userName("nobody")
                               .currentBranch("unknown")
+                              .pullRequestId("0")
                               .build();
         }
         return tryGetMetaData(config, pathToRepo.toAbsolutePath().normalize().resolve(".git"));
