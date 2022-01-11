@@ -45,7 +45,10 @@ public final class ArtifactAdapter {
                                             final String bucketName) throws IOException {
         try {
             val sourceDirsAndGit = new ArrayList<String>(sourceDirs);
-            sourceDirsAndGit.add(repositoryDir.resolve(".git").toAbsolutePath().toString());
+            if (config.getBeforeCommit() != null && config.getAfterCommit() != null) {
+                // only add the git folder if a commit range is provided.
+                sourceDirsAndGit.add(repositoryDir.resolve(".git").toAbsolutePath().toString());
+            }
             final String sourceKey =
                 zipAndUploadDir("analysis-src-" + UUID.randomUUID(), sourceDirsAndGit, repositoryDir,
                                 bucketName, tempDir, config.getAccountId(), config.getS3Client());

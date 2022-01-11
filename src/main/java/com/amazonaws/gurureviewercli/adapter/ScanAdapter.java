@@ -52,11 +52,11 @@ public final class ScanAdapter {
         val association = AssociationAdapter.getAssociatedGuruRepo(config);
         val bucketName = association.getS3RepositoryDetails().getBucketName();
         Log.info("Starting analysis of %s with association %s and S3 bucket %s",
-                 gitMetaData.getRepoRoot(), association.getAssociationArn(), bucketName);
+                 config.getRootDir(), association.getAssociationArn(), bucketName);
 
         try {
             val tempDir = Files.createTempDirectory("artifact-packing-dir");
-            val metadata = ArtifactAdapter.zipAndUpload(config, tempDir, gitMetaData.getRepoRoot(),
+            val metadata = ArtifactAdapter.zipAndUpload(config, tempDir, config.getRootDir(),
                                                         sourceDirs, buildDirs, bucketName);
 
             val request = createRepoAnalysisRequest(gitMetaData, metadata.getSourceKey(),

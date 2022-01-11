@@ -101,11 +101,12 @@ public class Main {
             main.validateInitialConfig(config);
             // try to build the AWS client objects first.
             main.createAWSClients(config);
-            // sanity check if repo is valid git.
-            val gitMetaData = main.readGitMetaData(config, Paths.get(main.repoDir).normalize());
 
-            String repoName = gitMetaData.getRepoRoot().toFile().getName();
+            String repoName = Paths.get(main.repoDir).toFile().getName();
             config.setRepoName(repoName);
+
+            // check if repo is valid git.
+            val gitMetaData = main.readGitMetaData(config, Paths.get(main.repoDir).normalize());
 
             val scanMetaData = ScanAdapter.startScan(config, gitMetaData, main.sourceDirs, main.buildDirs);
             val results = ScanAdapter.fetchResults(config, scanMetaData);
@@ -152,23 +153,24 @@ public class Main {
             throw new GuruCliException(ErrorCodes.BAD_BUCKET_NAME,
                                        config.getBucketName() + " is not a valid bucket name for CodeGuru.");
         }
-        if (Paths.get(repoDir).toFile().isDirectory()) {
+        if (!Paths.get(repoDir).toFile().isDirectory()) {
             throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
                                        repoDir + " is not a valid directory.");
         }
+        config.setRootDir(Paths.get(repoDir).toAbsolutePath().normalize());
         if (this.sourceDirs != null) {
             sourceDirs.forEach(sourceDir -> {
-                if (Paths.get(sourceDir).toFile().isDirectory()) {
+                if (!Paths.get(sourceDir).toFile().isDirectory()) {
                     throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
-                                               repoDir + " is not a valid directory.");
+                                               sourceDir + " is not a valid directory.");
                 }
             });
         }
         if (this.buildDirs != null) {
             buildDirs.forEach(buildDir -> {
-                if (Paths.get(buildDir).toFile().isDirectory()) {
+                if (!Paths.get(buildDir).toFile().isDirectory()) {
                     throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
-                                               repoDir + " is not a valid directory.");
+                                               buildDir + " is not a valid directory.");
                 }
             });
         }

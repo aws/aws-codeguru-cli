@@ -1,6 +1,6 @@
 package com.amazonaws.gurureviewercli.adapter;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -24,12 +24,21 @@ import com.amazonaws.gurureviewercli.util.Log;
  */
 public final class GitAdapter {
 
-    @Nullable
+    @Nonnull
     public static GitMetaData getGitMetatData(final Configuration config, final Path pathToRepo) {
+        val gitDir = pathToRepo.toAbsolutePath().normalize().resolve(".git");
+        if (!gitDir.toFile().isDirectory()) {
+            // if the directory is not under version control, return a dummy object.
+            return GitMetaData.builder()
+                              .repoRoot(pathToRepo)
+                              .userName("nobody")
+                              .currentBranch("unknown")
+                              .build();
+        }
         return tryGetMetaData(config, pathToRepo.toAbsolutePath().normalize().resolve(".git"));
     }
 
-    @Nullable
+    @Nonnull
     protected static GitMetaData tryGetMetaData(final Configuration config, final Path gitDir) {
         if (!gitDir.toFile().isDirectory()) {
             throw new GuruCliException(ErrorCodes.GIT_INVALID_DIR);

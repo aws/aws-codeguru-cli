@@ -8,6 +8,7 @@ import java.util.zip.ZipFile;
 
 import lombok.val;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -29,6 +30,8 @@ class ArtifactAdapterTest {
     @Test
     public void test_zipAndUpload_happyCaseSourceOnly() throws Exception{
         val repoDir = Paths.get("./");
+        // skip the test if the test container stripped to the top level .git folder
+        Assumptions.assumeTrue(repoDir.resolve(".git").toFile().isDirectory());
         val tempDir = Files.createTempDirectory("test_zipAndUpload_happyCase");
         val bucketName = "some-bucket";
 

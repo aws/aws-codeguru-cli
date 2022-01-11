@@ -5,11 +5,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import lombok.val;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -36,6 +36,8 @@ class ScanAdapterTest {
 
     @Test
     public void test_startScan_HappyCase() throws Exception {
+        // skip the test if the test container stripped to the top level .git folder
+        Assumptions.assumeTrue(Paths.get("./.git").toFile().isDirectory());
         val fakeArn = "123";
         val bucketName = "some-bucket";
         val repoDetails = new S3RepositoryDetails().withBucketName(bucketName);

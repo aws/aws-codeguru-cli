@@ -1,6 +1,7 @@
 package com.amazonaws.gurureviewercli.model;
 
 import javax.annotation.Nullable;
+import java.nio.file.Path;
 
 import lombok.Builder;
 import lombok.Data;
@@ -28,6 +29,8 @@ public class Configuration {
     private String region;
 
     private String repoName;
+
+    private Path rootDir;
 
     private TextIO textIO;
 
