@@ -61,7 +61,7 @@ public final class GitAdapter {
 
             if (config.getBeforeCommit() == null || config.getAfterCommit() == null) {
                 // ask if commits should be inferred or if the entire repo should be scanned.
-                Log.warn("CodeGuru will preform a full repository analysis if you do not provide a commit range.");
+                Log.warn("CodeGuru will perform a full repository analysis if you do not provide a commit range.");
                 Log.warn("For pricing details see: https://aws.amazon.com/codeguru/pricing/");
                 val doPackageScan =
                     !config.isInteractiveMode() ||
