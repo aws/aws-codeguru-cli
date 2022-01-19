@@ -25,14 +25,16 @@ public final class ZipUtils {
      * @throws IOException io exception
      */
     public static void pack(final List<String> sourceDirPaths, final String zipFilePath) throws IOException {
-        Path p = Files.createFile(Paths.get(zipFilePath));
+        Path p = Files.createFile(Paths.get(zipFilePath).normalize().toAbsolutePath());
         try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(p))) {
             for (val sourceDirPath : sourceDirPaths) {
-                Path pp = Paths.get(sourceDirPath);
+                Path pp = Paths.get(sourceDirPath).normalize().toAbsolutePath();
                 try (val walk = Files.walk(pp)) {
                     walk.filter(path -> !Files.isDirectory(path))
                         .forEach(path -> {
-                            ZipEntry zipEntry = new ZipEntry(pp.relativize(path).toString());
+                            val normalizedPath = path.normalize().toAbsolutePath();
+                            val relpath = pp.relativize(normalizedPath).toString();
+                            ZipEntry zipEntry = new ZipEntry(relpath);
                             try {
                                 zs.putNextEntry(zipEntry);
                                 zs.write(Files.readAllBytes(path));
@@ -68,12 +70,15 @@ public final class ZipUtils {
         Path p = Files.createFile(Paths.get(zipFilePath));
         try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(p))) {
             for (val sourceDirPath : sourceDirPaths) {
-                Path pp = Paths.get(sourceDirPath);
+                Path pp = Paths.get(sourceDirPath).normalize().toAbsolutePath();
                 try (val walk = Files.walk(pp)) {
                     walk.filter(path -> !Files.isDirectory(path))
                         .forEach(path -> {
-                            val relPath = relativeRoot.toAbsolutePath().normalize()
-                                                      .relativize(path.toAbsolutePath()).toString();
+                            val normalizedPath = path.normalize().toAbsolutePath();
+                            val relPath = relativeRoot.toAbsolutePath()
+                                                      .normalize()
+                                                      .relativize(normalizedPath)
+                                                      .normalize().toString();
                             ZipEntry zipEntry = new ZipEntry(relPath);
                             try {
                                 zs.putNextEntry(zipEntry);

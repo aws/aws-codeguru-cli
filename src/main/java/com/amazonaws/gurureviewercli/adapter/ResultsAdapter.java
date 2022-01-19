@@ -13,11 +13,11 @@ import lombok.val;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
+import software.amazon.awssdk.services.codegurureviewer.model.RecommendationSummary;
 
 import com.amazonaws.gurureviewercli.model.ScanMetaData;
 import com.amazonaws.gurureviewercli.util.JsonUtil;
 import com.amazonaws.gurureviewercli.util.Log;
-import com.amazonaws.services.codegurureviewer.model.RecommendationSummary;
 
 /**
  * Util to save Guru recommendations to disk and convert them to HTML.
@@ -66,7 +66,7 @@ public final class ResultsAdapter {
             writer.write("\n<br/><hr style=\"width:90%\"><br/>\n");
 
             for (val recommendation : recommendations) {
-                val filePath = scanMetaData.getRepositoryRoot().resolve(recommendation.getFilePath()).toAbsolutePath();
+                val filePath = scanMetaData.getRepositoryRoot().resolve(recommendation.filePath()).toAbsolutePath();
                 if (filePath == null || !filePath.toFile().isFile()) {
                     if (filePath != null && !(filePath.endsWith(".") || filePath.endsWith("/"))) {
                         Log.warn("Dropping finding because file not found on disk: %s", filePath);
@@ -75,36 +75,36 @@ public final class ResultsAdapter {
                 }
                 validFindings++;
                 String lineMsg;
-                if (!recommendation.getStartLine().equals(recommendation.getEndLine())
-                    && recommendation.getEndLine() != null) {
+                if (!recommendation.startLine().equals(recommendation.endLine())
+                    && recommendation.endLine() != null) {
                     lineMsg = String.format("### In: [%s](%s) L%d %n",
                                             filePath, filePath.toUri(),
-                                            recommendation.getStartLine());
+                                            recommendation.startLine());
                 } else {
                     lineMsg = String.format("### In: [%s](%s) L%d - L%d %n",
                                             filePath, filePath.toUri(),
-                                            recommendation.getStartLine(),
-                                            recommendation.getEndLine());
+                                            recommendation.startLine(),
+                                            recommendation.endLine());
                 }
 
                 Node document = parser.parse(String.format("### In: [%s](%s) L%d %n",
                                                            filePath, filePath.toUri(),
-                                                           recommendation.getStartLine()));
+                                                           recommendation.startLine()));
                 writer.write(renderer.render(document));
 
-                document = parser.parse("**Issue:** " + recommendation.getDescription());
+                document = parser.parse("**Issue:** " + recommendation.description());
                 writer.write(renderer.render(document));
 
-                writer.write(String.format("<p><strong>Severity:</strong> %s<p/>", recommendation.getSeverity()));
+                writer.write(String.format("<p><strong>Severity:</strong> %s<p/>", recommendation.severity()));
 
-                if (recommendation.getRuleMetadata() != null && recommendation.getRuleMetadata().getRuleId() != null) {
-                    val manifest = recommendation.getRuleMetadata();
-                    writer.write(String.format("<p><strong>Rule ID:</strong> %s<p/>", manifest.getRuleId()));
-                    writer.write(String.format("<p><strong>Rule Name:</strong> %s<p/>", manifest.getRuleName()));
-                    document = parser.parse("**Description:** " + manifest.getLongDescription());
+                if (recommendation.ruleMetadata() != null && recommendation.ruleMetadata().ruleId() != null) {
+                    val manifest = recommendation.ruleMetadata();
+                    writer.write(String.format("<p><strong>Rule ID:</strong> %s<p/>", manifest.ruleId()));
+                    writer.write(String.format("<p><strong>Rule Name:</strong> %s<p/>", manifest.ruleName()));
+                    document = parser.parse("**Description:** " + manifest.longDescription());
                     writer.write(renderer.render(document));
-                    if (manifest.getRuleTags() != null && !manifest.getRuleTags().isEmpty()) {
-                        val mdList = manifest.getRuleTags().stream()
+                    if (manifest.ruleTags() != null && !manifest.ruleTags().isEmpty()) {
+                        val mdList = manifest.ruleTags().stream()
                                              .map(s -> String.format("- %s%n", s))
                                              .collect(Collectors.joining());
                         document = parser.parse("**Tags:**\n" + mdList);
@@ -121,9 +121,9 @@ public final class ResultsAdapter {
 
     private static void sortByFileName(final List<RecommendationSummary> recommendations) {
         Collections.sort(recommendations, (o1, o2) -> {
-            int pathComp = o1.getFilePath().compareTo(o2.getFilePath());
+            int pathComp = o1.filePath().compareTo(o2.filePath());
             if (pathComp == 0) {
-                return o1.getStartLine().compareTo(o2.getStartLine());
+                return o1.startLine().compareTo(o2.startLine());
             }
             return pathComp;
         });

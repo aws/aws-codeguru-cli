@@ -1,8 +1,10 @@
 package com.amazonaws.gurureviewercli;
 
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -12,12 +14,17 @@ import com.beust.jcommander.ParameterException;
 import lombok.val;
 import org.beryx.textio.TextIO;
 import org.beryx.textio.system.SystemTextTerminal;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.codegurureviewer.CodeGuruReviewerClient;
+import software.amazon.awssdk.services.codegurureviewer.model.RecommendationSummary;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.sts.StsClient;
 
-import com.amazonaws.SdkClientException;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.gurureviewercli.adapter.GitAdapter;
 import com.amazonaws.gurureviewercli.adapter.ResultsAdapter;
 import com.amazonaws.gurureviewercli.adapter.ScanAdapter;
@@ -25,13 +32,8 @@ import com.amazonaws.gurureviewercli.exceptions.GuruCliException;
 import com.amazonaws.gurureviewercli.model.Configuration;
 import com.amazonaws.gurureviewercli.model.ErrorCodes;
 import com.amazonaws.gurureviewercli.model.GitMetaData;
+import com.amazonaws.gurureviewercli.model.ScanMetaData;
 import com.amazonaws.gurureviewercli.util.Log;
-import com.amazonaws.services.codegurureviewer.AmazonCodeGuruReviewer;
-import com.amazonaws.services.codegurureviewer.AmazonCodeGuruReviewerClientBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
-import com.amazonaws.services.securitytoken.model.GetCallerIdentityRequest;
 
 public class Main {
     private static final String REVIEWER_ENDPOINT_PATTERN = "https://codeguru-reviewer.%s.amazonaws.com";
@@ -108,8 +110,22 @@ public class Main {
             // check if repo is valid git.
             val gitMetaData = main.readGitMetaData(config, Paths.get(main.repoDir).normalize());
 
-            val scanMetaData = ScanAdapter.startScan(config, gitMetaData, main.sourceDirs, main.buildDirs);
-            val results = ScanAdapter.fetchResults(config, scanMetaData);
+            ScanMetaData scanMetaData = null;
+            List<RecommendationSummary> results = new ArrayList<>();
+            try {
+                scanMetaData = ScanAdapter.startScan(config, gitMetaData, main.sourceDirs, main.buildDirs);
+                results.addAll(ScanAdapter.fetchResults(config, scanMetaData));
+            } finally {
+                if (scanMetaData != null) {
+                    // try to clean up objects from S3.
+                    main.tryDeleteS3Object(config.getS3Client(),
+                                           scanMetaData.getBucketName(),
+                                           scanMetaData.getSourceKey());
+                    main.tryDeleteS3Object(config.getS3Client(),
+                                           scanMetaData.getBucketName(),
+                                           scanMetaData.getBuildKey());
+                }
+            }
 
             val outputPath = Paths.get(main.outputDir);
             if (!outputPath.toFile().exists()) {
@@ -118,10 +134,10 @@ public class Main {
                 }
             }
             ResultsAdapter.saveResults(outputPath, results, scanMetaData);
-
             Log.info("Analysis finished.");
         } catch (GuruCliException e) {
             Log.error("%s: %s", e.getErrorCode(), e.getMessage());
+            e.printStackTrace();
         } catch (ParameterException e) {
             Log.error(e);
             jCommander.usage();
@@ -177,16 +193,26 @@ public class Main {
         }
     }
 
+    private void tryDeleteS3Object(final S3Client s3Client, final String s3Bucket, final String s3Key) {
+        try {
+            if (s3Key != null) {
+                s3Client.deleteObject(DeleteObjectRequest.builder().bucket(s3Bucket).key(s3Key).build());
+            }
+        } catch (Throwable e) {
+            Log.warn("Failed to delete %s from %s. Please delete the object by hand.", s3Key, s3Bucket);
+        }
+    }
+
     protected void createAWSClients(final Configuration config) {
         val credentials = getCredentials();
         try {
             config.setRegion(regionName);
             val callerIdentity =
-                AWSSecurityTokenServiceClientBuilder.standard()
-                                                    .withRegion(this.regionName)
-                                                    .withCredentials(credentials).build()
-                                                    .getCallerIdentity(new GetCallerIdentityRequest());
-            config.setAccountId(callerIdentity.getAccount());
+                StsClient.builder()
+                         .credentialsProvider(credentials)
+                         .region(Region.of(regionName))
+                         .build().getCallerIdentity();
+            config.setAccountId(callerIdentity.account());
             config.setGuruFrontendService(getNewGuruClient(credentials));
             config.setS3Client(getS3Client(credentials));
         } catch (IllegalArgumentException e) {
@@ -201,26 +227,26 @@ public class Main {
         }
     }
 
-    private AWSCredentialsProvider getCredentials() {
+    private AwsCredentialsProvider getCredentials() {
         if (profileName == null || profileName.replaceAll("\\s+", "").length() == 0) {
-            return new DefaultAWSCredentialsProviderChain();
+            return DefaultCredentialsProvider.create();
         }
-        return new ProfileCredentialsProvider(profileName);
+        return ProfileCredentialsProvider.create(profileName);
     }
 
-    private AmazonCodeGuruReviewer getNewGuruClient(AWSCredentialsProvider credentialsProvider) {
-        String endpoint = String.format(REVIEWER_ENDPOINT_PATTERN, regionName);
-        val endpointConfig = new AwsClientBuilder.EndpointConfiguration(endpoint, regionName);
-        return AmazonCodeGuruReviewerClientBuilder.standard()
-                                                  .withCredentials(credentialsProvider)
-                                                  .withEndpointConfiguration(endpointConfig)
-                                                  .build();
+    private CodeGuruReviewerClient getNewGuruClient(AwsCredentialsProvider credentialsProvider) {
+        final String endpoint = String.format(REVIEWER_ENDPOINT_PATTERN, regionName);
+        return CodeGuruReviewerClient.builder()
+                                     .credentialsProvider(credentialsProvider)
+                                     .endpointOverride(URI.create(endpoint))
+                                     .region(Region.of(regionName))
+                                     .build();
     }
 
-    private AmazonS3 getS3Client(AWSCredentialsProvider credentialsProvider) {
-        return AmazonS3ClientBuilder.standard()
-                                    .withCredentials(credentialsProvider)
-                                    .withRegion(regionName)
-                                    .build();
+    private S3Client getS3Client(AwsCredentialsProvider credentialsProvider) {
+        return S3Client.builder()
+                       .credentialsProvider(credentialsProvider)
+                       .region(Region.of(regionName))
+                       .build();
     }
 }

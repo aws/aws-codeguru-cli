@@ -1,5 +1,7 @@
 package com.amazonaws.gurureviewercli.adapter;
 
+import java.util.Collections;
+
 import lombok.val;
 import org.beryx.textio.TextIO;
 import org.beryx.textio.mock.MockTextTerminal;
@@ -8,65 +10,76 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.services.codegurureviewer.CodeGuruReviewerClient;
+import software.amazon.awssdk.services.codegurureviewer.model.AssociateRepositoryRequest;
+import software.amazon.awssdk.services.codegurureviewer.model.AssociateRepositoryResponse;
+import software.amazon.awssdk.services.codegurureviewer.model.DescribeRepositoryAssociationRequest;
+import software.amazon.awssdk.services.codegurureviewer.model.DescribeRepositoryAssociationResponse;
+import software.amazon.awssdk.services.codegurureviewer.model.ListRepositoryAssociationsRequest;
+import software.amazon.awssdk.services.codegurureviewer.model.ListRepositoryAssociationsResponse;
+import software.amazon.awssdk.services.codegurureviewer.model.RepositoryAssociation;
+import software.amazon.awssdk.services.codegurureviewer.model.RepositoryAssociationSummary;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.HeadBucketResponse;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.gurureviewercli.exceptions.GuruCliException;
 import com.amazonaws.gurureviewercli.model.Configuration;
 import com.amazonaws.gurureviewercli.model.ErrorCodes;
-import com.amazonaws.services.codegurureviewer.AmazonCodeGuruReviewer;
-import com.amazonaws.services.codegurureviewer.model.AssociateRepositoryResult;
-import com.amazonaws.services.codegurureviewer.model.DescribeRepositoryAssociationResult;
-import com.amazonaws.services.codegurureviewer.model.ListRepositoryAssociationsResult;
-import com.amazonaws.services.codegurureviewer.model.RepositoryAssociation;
-import com.amazonaws.services.codegurureviewer.model.RepositoryAssociationSummary;
-import com.amazonaws.services.s3.AmazonS3;
 
 @ExtendWith(MockitoExtension.class)
 class AssociationAdapterTest {
 
     @Mock
-    private AmazonCodeGuruReviewer guruFrontendService;
+    private CodeGuruReviewerClient guruFrontendService;
 
     @Mock
-    private AmazonS3 s3client;
+    private S3Client s3client;
 
     @Test
     public void test_getAssociatedGuruRepo_associationExists() {
         val fakeArn = "123";
-        val expected = new RepositoryAssociation().withAssociationArn(fakeArn);
-        val summary = new RepositoryAssociationSummary().withAssociationArn(fakeArn);
-        val response = new ListRepositoryAssociationsResult().withRepositoryAssociationSummaries(summary);
-        when(guruFrontendService.listRepositoryAssociations(any()))
+        val expected = RepositoryAssociation.builder().associationArn(fakeArn).build();
+        val summary = RepositoryAssociationSummary.builder().associationArn(fakeArn).build();
+        val response = ListRepositoryAssociationsResponse.builder().repositoryAssociationSummaries(summary).build();
+        when(guruFrontendService.listRepositoryAssociations(any(ListRepositoryAssociationsRequest.class)))
             .thenReturn(response);
-        val describeResponse = new DescribeRepositoryAssociationResult().withRepositoryAssociation(expected);
-        when(guruFrontendService.describeRepositoryAssociation(any())).thenReturn(describeResponse);
+        val describeResponse = DescribeRepositoryAssociationResponse.builder().repositoryAssociation(expected).build();
+        when(guruFrontendService.describeRepositoryAssociation(any(DescribeRepositoryAssociationRequest.class)))
+            .thenReturn(describeResponse);
         val config = Configuration.builder()
                                   .guruFrontendService(guruFrontendService)
                                   .repoName("some-repo-name")
                                   .build();
         val association = AssociationAdapter.getAssociatedGuruRepo(config);
-        Assertions.assertEquals(expected.getAssociationArn(), association.getAssociationArn());
+        Assertions.assertEquals(expected.associationArn(), association.associationArn());
     }
 
     @Test
     public void test_getAssociatedGuruRepo_createNewWithExistingBucket() {
         val bucketName = "some-bucket";
         val fakeArn = "123";
-        val expected = new RepositoryAssociation().withAssociationArn(fakeArn);
-        val emptyListResponse = new ListRepositoryAssociationsResult().withRepositoryAssociationSummaries();
-        when(guruFrontendService.listRepositoryAssociations(any()))
+        val expected = RepositoryAssociation.builder().associationArn(fakeArn).build();
+        val emptyListResponse =
+            ListRepositoryAssociationsResponse.builder()
+                                              .repositoryAssociationSummaries(Collections.emptyList())
+                                              .build();
+        when(guruFrontendService.listRepositoryAssociations(any(ListRepositoryAssociationsRequest.class)))
             .thenReturn(emptyListResponse);
-        when(s3client.doesBucketExistV2(any())).thenReturn(true);
-        when(guruFrontendService.associateRepository(any()))
-            .thenReturn(new AssociateRepositoryResult().withRepositoryAssociation(expected));
+        when(s3client.headBucket(any(HeadBucketRequest.class))).thenReturn(HeadBucketResponse.builder().build());
+        when(guruFrontendService.associateRepository(any(AssociateRepositoryRequest.class)))
+            .thenReturn(AssociateRepositoryResponse.builder().repositoryAssociation(expected).build());
         val config = Configuration.builder()
                                   .guruFrontendService(guruFrontendService)
+                                  .interactiveMode(false)
                                   .s3Client(s3client)
                                   .repoName("some-repo-name")
                                   .build();
         val association = AssociationAdapter.getAssociatedGuruRepo(config);
-        Assertions.assertEquals(expected.getAssociationArn(), association.getAssociationArn());
+        Assertions.assertEquals(expected.associationArn(), association.associationArn());
     }
 
     @Test
@@ -75,13 +88,16 @@ class AssociationAdapterTest {
         // return anything
         val bucketName = "some-bucket";
         val fakeArn = "123";
-        val expected = new RepositoryAssociation().withAssociationArn(fakeArn);
-        val emptyListResponse = new ListRepositoryAssociationsResult().withRepositoryAssociationSummaries();
-        when(guruFrontendService.listRepositoryAssociations(any()))
+        val expected = RepositoryAssociation.builder().associationArn(fakeArn).build();
+        val emptyListResponse =
+            ListRepositoryAssociationsResponse.builder()
+                                              .repositoryAssociationSummaries(Collections.emptyList())
+                                              .build();
+        when(guruFrontendService.listRepositoryAssociations(any(ListRepositoryAssociationsRequest.class)))
             .thenReturn(emptyListResponse);
-        when(s3client.doesBucketExistV2(any())).thenReturn(false);
-        when(guruFrontendService.associateRepository(any()))
-            .thenReturn(new AssociateRepositoryResult().withRepositoryAssociation(expected));
+        when(s3client.headBucket(any(HeadBucketRequest.class))).thenThrow(NoSuchBucketException.class);
+        when(guruFrontendService.associateRepository(any(AssociateRepositoryRequest.class)))
+            .thenReturn(AssociateRepositoryResponse.builder().repositoryAssociation(expected).build());
         val config = Configuration.builder()
                                   .guruFrontendService(guruFrontendService)
                                   .interactiveMode(false)
@@ -89,20 +105,23 @@ class AssociationAdapterTest {
                                   .repoName("some-repo-name")
                                   .build();
         val association = AssociationAdapter.getAssociatedGuruRepo(config);
-        Assertions.assertEquals(expected.getAssociationArn(), association.getAssociationArn());
+        Assertions.assertEquals(expected.associationArn(), association.associationArn());
     }
 
     @Test
     public void test_getAssociatedGuruRepo_createNewWithCreateBucketInteractive() {
         val bucketName = "some-bucket";
         val fakeArn = "123";
-        val expected = new RepositoryAssociation().withAssociationArn(fakeArn);
-        val emptyListResponse = new ListRepositoryAssociationsResult().withRepositoryAssociationSummaries();
-        when(guruFrontendService.listRepositoryAssociations(any()))
+        val expected = RepositoryAssociation.builder().associationArn(fakeArn).build();
+        val emptyListResponse =
+            ListRepositoryAssociationsResponse.builder()
+                                              .repositoryAssociationSummaries(Collections.emptyList())
+                                              .build();
+        when(guruFrontendService.listRepositoryAssociations(any(ListRepositoryAssociationsRequest.class)))
             .thenReturn(emptyListResponse);
-        when(s3client.doesBucketExistV2(any())).thenReturn(false);
-        when(guruFrontendService.associateRepository(any()))
-            .thenReturn(new AssociateRepositoryResult().withRepositoryAssociation(expected));
+        when(s3client.headBucket(any(HeadBucketRequest.class))).thenThrow(NoSuchBucketException.class);
+        when(guruFrontendService.associateRepository(any(AssociateRepositoryRequest.class)))
+            .thenReturn(AssociateRepositoryResponse.builder().repositoryAssociation(expected).build());
 
         val mockTerminal = new MockTextTerminal();
         mockTerminal.getInputs().add("y");
@@ -115,16 +134,19 @@ class AssociationAdapterTest {
                                   .textIO(new TextIO(mockTerminal))
                                   .build();
         val association = AssociationAdapter.getAssociatedGuruRepo(config);
-        Assertions.assertEquals(expected.getAssociationArn(), association.getAssociationArn());
+        Assertions.assertEquals(expected.associationArn(), association.associationArn());
     }
 
     @Test
     public void test_getAssociatedGuruRepo_createNewWithCreateBucketInteractiveAbort() {
         val bucketName = "some-bucket";
-        val emptyListResponse = new ListRepositoryAssociationsResult().withRepositoryAssociationSummaries();
-        when(guruFrontendService.listRepositoryAssociations(any()))
+        val emptyListResponse =
+            ListRepositoryAssociationsResponse.builder()
+                                              .repositoryAssociationSummaries(Collections.emptyList())
+                                              .build();
+        when(guruFrontendService.listRepositoryAssociations(any(ListRepositoryAssociationsRequest.class)))
             .thenReturn(emptyListResponse);
-        when(s3client.doesBucketExistV2(any())).thenReturn(false);
+        when(s3client.headBucket(any(HeadBucketRequest.class))).thenThrow(NoSuchBucketException.class);
 
         val mockTerminal = new MockTextTerminal();
         mockTerminal.getInputs().add("n");

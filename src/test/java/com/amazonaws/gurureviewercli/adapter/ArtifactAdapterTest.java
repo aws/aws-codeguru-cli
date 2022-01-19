@@ -1,8 +1,10 @@
 package com.amazonaws.gurureviewercli.adapter;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.zip.ZipFile;
 
@@ -14,18 +16,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 
 import com.amazonaws.gurureviewercli.model.Configuration;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.PutObjectRequest;
 
 @ExtendWith(MockitoExtension.class)
 class ArtifactAdapterTest {
 
     @Mock
-    private AmazonS3 s3client;
+    private S3Client s3client;
 
     @Test
     public void test_zipAndUpload_happyCaseSourceOnly() throws Exception{
@@ -36,15 +38,15 @@ class ArtifactAdapterTest {
         val bucketName = "some-bucket";
 
         final List<String> sourceDirs = Arrays.asList("src");
-        final List<String> buildDirs = Arrays.asList();
+        final List<String> buildDirs = Collections.emptyList();
         val config = Configuration.builder()
                                   .s3Client(s3client)
                                   .build();
         Answer<Object> answer = invocationOnMock -> {
             System.err.println(invocationOnMock);
-            PutObjectRequest request = invocationOnMock.getArgument(0);
-            Assertions.assertTrue(request.getFile().isFile());
-            try (val zipFile = new ZipFile(request.getFile())) {
+            Path filePath = invocationOnMock.getArgument(1);
+            Assertions.assertTrue(filePath.toFile().isFile());
+            try (val zipFile = new ZipFile(filePath.toFile())) {
                 val entries = zipFile.entries();
                 while (entries.hasMoreElements()) {
                     val s = entries.nextElement().getName();
@@ -55,7 +57,7 @@ class ArtifactAdapterTest {
             }
             return null;
         };
-        doAnswer(answer).when(s3client).putObject(any());
+        doAnswer(answer).when(s3client).putObject(any(PutObjectRequest.class), any(Path.class));
 
         val metaData = ArtifactAdapter.zipAndUpload(config, tempDir, repoDir, sourceDirs, buildDirs, bucketName);
         Assertions.assertNull(metaData.getBuildKey());

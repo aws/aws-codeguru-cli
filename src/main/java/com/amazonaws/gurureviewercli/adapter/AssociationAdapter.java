@@ -1,19 +1,21 @@
 package com.amazonaws.gurureviewercli.adapter;
 
 import lombok.val;
+import software.amazon.awssdk.services.codegurureviewer.model.AssociateRepositoryRequest;
+import software.amazon.awssdk.services.codegurureviewer.model.DescribeRepositoryAssociationRequest;
+import software.amazon.awssdk.services.codegurureviewer.model.ListRepositoryAssociationsRequest;
+import software.amazon.awssdk.services.codegurureviewer.model.ProviderType;
+import software.amazon.awssdk.services.codegurureviewer.model.Repository;
+import software.amazon.awssdk.services.codegurureviewer.model.RepositoryAssociation;
+import software.amazon.awssdk.services.codegurureviewer.model.S3Repository;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 
 import com.amazonaws.gurureviewercli.exceptions.GuruCliException;
 import com.amazonaws.gurureviewercli.model.Configuration;
 import com.amazonaws.gurureviewercli.model.ErrorCodes;
 import com.amazonaws.gurureviewercli.util.Log;
-import com.amazonaws.services.codegurureviewer.model.AssociateRepositoryRequest;
-import com.amazonaws.services.codegurureviewer.model.DescribeRepositoryAssociationRequest;
-import com.amazonaws.services.codegurureviewer.model.ListRepositoryAssociationsRequest;
-import com.amazonaws.services.codegurureviewer.model.ProviderType;
-import com.amazonaws.services.codegurureviewer.model.Repository;
-import com.amazonaws.services.codegurureviewer.model.RepositoryAssociation;
-import com.amazonaws.services.codegurureviewer.model.S3Repository;
-import com.amazonaws.services.s3.model.CreateBucketRequest;
 
 /**
  * Utility class to get or create a CodeGuru Reviewer Repository association.
@@ -31,16 +33,18 @@ public final class AssociationAdapter {
     public static RepositoryAssociation getAssociatedGuruRepo(final Configuration config) {
         val guruFrontendService = config.getGuruFrontendService();
         val repositoryAssociationsRequest =
-            new ListRepositoryAssociationsRequest().withProviderTypes(ProviderType.S3Bucket)
-                                                   .withNames(config.getRepoName());
+            ListRepositoryAssociationsRequest.builder()
+                .providerTypes(ProviderType.S3_BUCKET)
+                .names(config.getRepoName())
+                                             .build();
         val associationResults = guruFrontendService.listRepositoryAssociations(repositoryAssociationsRequest);
-        if (associationResults.getRepositoryAssociationSummaries().size() == 1) {
-            val summary = associationResults.getRepositoryAssociationSummaries().get(0);
+        if (associationResults.repositoryAssociationSummaries().size() == 1) {
+            val summary = associationResults.repositoryAssociationSummaries().get(0);
             val describeAssociationRequest =
-                new DescribeRepositoryAssociationRequest().withAssociationArn(summary.getAssociationArn());
+                DescribeRepositoryAssociationRequest.builder().associationArn(summary.associationArn()).build();
             return guruFrontendService.describeRepositoryAssociation(describeAssociationRequest)
-                                      .getRepositoryAssociation();
-        } else if (associationResults.getRepositoryAssociationSummaries().isEmpty()) {
+                                      .repositoryAssociation();
+        } else if (associationResults.repositoryAssociationSummaries().isEmpty()) {
             return createBucketAndAssociation(config);
         } else {
             throw new RuntimeException("Found more than one matching association: " + associationResults);
@@ -58,31 +62,40 @@ public final class AssociationAdapter {
         } else {
             bucketName = String.format(BUCKET_NAME_PATTERN, config.getAccountId(), config.getRegion());
         }
-        if (!config.getS3Client().doesBucketExistV2(bucketName)) {
+        try {
+            config.getS3Client().headBucket(HeadBucketRequest.builder().bucket(bucketName).build());
+        } catch (NoSuchBucketException e) {
             Log.info("CodeGuru Reviewer requires an S3 bucket to upload the analysis artifacts to.");
-            val doPackageScan =
+            val createBucket =
                 !config.isInteractiveMode() ||
                 config.getTextIO()
                       .newBooleanInputReader()
                       .withTrueInput("y")
                       .withFalseInput("n")
                       .read("Do you want to create a new S3 bucket: " + bucketName, bucketName);
-            if (doPackageScan) {
+            if (createBucket) {
                 Log.info("Creating new bucket: %s", bucketName);
-                config.getS3Client().createBucket(new CreateBucketRequest(bucketName));
+                config.getS3Client().createBucket(CreateBucketRequest.builder().bucket(bucketName).build());
             } else {
                 throw new GuruCliException(ErrorCodes.USER_ABORT, "CodeGuru needs an S3 bucket to continue.");
             }
+
         }
-        val repository = new Repository().withS3Bucket(new S3Repository().withName(config.getRepoName())
-                                                                         .withBucketName(bucketName));
-        val associateRequest = new AssociateRepositoryRequest().withRepository(repository);
+
+        val repository = Repository.builder()
+                                   .s3Bucket(S3Repository.builder()
+                                                         .bucketName(bucketName)
+                                                         .name(config.getRepoName())
+                                                         .build())
+                                   .build();
+
+        val associateRequest = AssociateRepositoryRequest.builder().repository(repository).build();
         val associateResponse = config.getGuruFrontendService().associateRepository(associateRequest);
 
         Log.print("Created new repository association: ");
         Log.awsUrl("?region=%s#/ciworkflows/associationdetails/%s", config.getRegion(),
-                   associateResponse.getRepositoryAssociation().getAssociationArn());
-        return associateResponse.getRepositoryAssociation();
+                   associateResponse.repositoryAssociation().associationArn());
+        return associateResponse.repositoryAssociation();
     }
 
     private AssociationAdapter() {

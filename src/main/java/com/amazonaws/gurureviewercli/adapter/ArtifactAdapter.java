@@ -13,12 +13,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import lombok.val;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import com.amazonaws.gurureviewercli.model.Configuration;
 import com.amazonaws.gurureviewercli.model.ScanMetaData;
 import com.amazonaws.gurureviewercli.util.ZipUtils;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.PutObjectRequest;
 
 /**
  * Utility class class to Zip and upload source and build artifacts to S3.
@@ -88,7 +88,7 @@ public final class ArtifactAdapter {
                                           final String bucketName,
                                           final Path tempDir,
                                           final String accountId,
-                                          final AmazonS3 s3Client) throws IOException {
+                                          final S3Client s3Client) throws IOException {
         return zipAndUploadDir(artifactName, dirNames, null, bucketName, tempDir, accountId, s3Client);
     }
 
@@ -98,7 +98,7 @@ public final class ArtifactAdapter {
                                           final String bucketName,
                                           final Path tempDir,
                                           final String accountId,
-                                          final AmazonS3 s3Client) throws IOException {
+                                          final S3Client s3Client) throws IOException {
         if (dirNames != null) {
             for (val dirName : dirNames) {
                 if (!Paths.get(dirName).toAbsolutePath().toFile().isDirectory()) {
@@ -115,9 +115,12 @@ public final class ArtifactAdapter {
                     ZipUtils.pack(dirNames, zipFile.toString());
                 }
             }
-            val putBinZip = new PutObjectRequest(bucketName, s3Key, zipFile.toFile())
-                .withExpectedBucketOwner(accountId);
-            s3Client.putObject(putBinZip);
+            val putObjectRequest = PutObjectRequest.builder()
+                                                   .bucket(bucketName)
+                                                   .key(s3Key)
+                                                   .expectedBucketOwner(accountId)
+                                                   .build();
+            s3Client.putObject(putObjectRequest, zipFile);
             return s3Key;
         }
         return null;

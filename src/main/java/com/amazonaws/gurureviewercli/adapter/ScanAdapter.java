@@ -9,32 +9,33 @@ import java.util.concurrent.TimeUnit;
 
 import com.beust.jcommander.internal.Nullable;
 import lombok.val;
+import software.amazon.awssdk.services.codegurureviewer.CodeGuruReviewerClient;
+import software.amazon.awssdk.services.codegurureviewer.model.AnalysisType;
+import software.amazon.awssdk.services.codegurureviewer.model.CodeArtifacts;
+import software.amazon.awssdk.services.codegurureviewer.model.CodeReviewType;
+import software.amazon.awssdk.services.codegurureviewer.model.CommitDiffSourceCodeType;
+import software.amazon.awssdk.services.codegurureviewer.model.CreateCodeReviewRequest;
+import software.amazon.awssdk.services.codegurureviewer.model.DescribeCodeReviewRequest;
+import software.amazon.awssdk.services.codegurureviewer.model.DescribeCodeReviewResponse;
+import software.amazon.awssdk.services.codegurureviewer.model.EventInfo;
+import software.amazon.awssdk.services.codegurureviewer.model.JobState;
+import software.amazon.awssdk.services.codegurureviewer.model.ListRecommendationsRequest;
+import software.amazon.awssdk.services.codegurureviewer.model.RecommendationSummary;
+import software.amazon.awssdk.services.codegurureviewer.model.RepositoryAnalysis;
+import software.amazon.awssdk.services.codegurureviewer.model.RepositoryAssociation;
+import software.amazon.awssdk.services.codegurureviewer.model.RepositoryHeadSourceCodeType;
+import software.amazon.awssdk.services.codegurureviewer.model.RequestMetadata;
+import software.amazon.awssdk.services.codegurureviewer.model.S3BucketRepository;
+import software.amazon.awssdk.services.codegurureviewer.model.S3RepositoryDetails;
+import software.amazon.awssdk.services.codegurureviewer.model.SourceCodeType;
+import software.amazon.awssdk.services.codegurureviewer.model.ValidationException;
+import software.amazon.awssdk.services.codegurureviewer.model.VendorName;
 
 import com.amazonaws.gurureviewercli.model.Configuration;
 import com.amazonaws.gurureviewercli.model.GitMetaData;
 import com.amazonaws.gurureviewercli.model.ScanMetaData;
 import com.amazonaws.gurureviewercli.util.Log;
-import com.amazonaws.services.codegurureviewer.AmazonCodeGuruReviewer;
-import com.amazonaws.services.codegurureviewer.model.AnalysisType;
-import com.amazonaws.services.codegurureviewer.model.CodeArtifacts;
-import com.amazonaws.services.codegurureviewer.model.CodeReviewType;
-import com.amazonaws.services.codegurureviewer.model.CommitDiffSourceCodeType;
-import com.amazonaws.services.codegurureviewer.model.CreateCodeReviewRequest;
-import com.amazonaws.services.codegurureviewer.model.DescribeCodeReviewRequest;
-import com.amazonaws.services.codegurureviewer.model.DescribeCodeReviewResult;
-import com.amazonaws.services.codegurureviewer.model.EventInfo;
-import com.amazonaws.services.codegurureviewer.model.ListRecommendationsRequest;
-import com.amazonaws.services.codegurureviewer.model.ListRecommendationsResult;
-import com.amazonaws.services.codegurureviewer.model.RecommendationSummary;
-import com.amazonaws.services.codegurureviewer.model.RepositoryAnalysis;
-import com.amazonaws.services.codegurureviewer.model.RepositoryAssociation;
-import com.amazonaws.services.codegurureviewer.model.RepositoryHeadSourceCodeType;
-import com.amazonaws.services.codegurureviewer.model.RequestMetadata;
-import com.amazonaws.services.codegurureviewer.model.S3BucketRepository;
-import com.amazonaws.services.codegurureviewer.model.S3RepositoryDetails;
-import com.amazonaws.services.codegurureviewer.model.SourceCodeType;
-import com.amazonaws.services.codegurureviewer.model.ValidationException;
-import com.amazonaws.services.codegurureviewer.model.VendorName;
+
 
 /**
  * Wraps the commands to start a code-review and to poll and download the results.
@@ -50,9 +51,9 @@ public final class ScanAdapter {
                                          final List<String> sourceDirs,
                                          final List<String> buildDirs) throws IOException {
         val association = AssociationAdapter.getAssociatedGuruRepo(config);
-        val bucketName = association.getS3RepositoryDetails().getBucketName();
+        val bucketName = association.s3RepositoryDetails().bucketName();
         Log.info("Starting analysis of %s with association %s and S3 bucket %s",
-                 config.getRootDir(), association.getAssociationArn(), bucketName);
+                 config.getRootDir(), association.associationArn(), bucketName);
 
         try {
             val tempDir = Files.createTempDirectory("artifact-packing-dir");
@@ -69,10 +70,10 @@ public final class ScanAdapter {
 
             Log.print("Started new CodeGuru Reviewer scan: ");
             Log.awsUrl("?region=%s#/codereviews/details/%s", config.getRegion(),
-                       response.getCodeReview().getCodeReviewArn());
+                       response.codeReview().codeReviewArn());
 
-            metadata.setCodeReviewArn(response.getCodeReview().getCodeReviewArn());
-            metadata.setAssociationArn(association.getAssociationArn());
+            metadata.setCodeReviewArn(response.codeReview().codeReviewArn());
+            metadata.setAssociationArn(association.associationArn());
             metadata.setRegion(config.getRegion());
             return metadata;
         } catch (ValidationException e) {
@@ -83,27 +84,28 @@ public final class ScanAdapter {
     public static List<RecommendationSummary> fetchResults(final Configuration config,
                                                            final ScanMetaData scanMetaData) {
         val reviewARN = scanMetaData.getCodeReviewArn();
-        val describeReviewRequest = new DescribeCodeReviewRequest().withCodeReviewArn(reviewARN);
-        DescribeCodeReviewResult response = config.getGuruFrontendService().describeCodeReview(describeReviewRequest);
+        val describeReviewRequest = DescribeCodeReviewRequest.builder().codeReviewArn(reviewARN).build();
+        DescribeCodeReviewResponse response = config.getGuruFrontendService().describeCodeReview(describeReviewRequest);
         while (response != null) {
-            if ("Completed".equals(response.getCodeReview().getState())) {
+            val state = response.codeReview().state();
+            if (JobState.COMPLETED.equals(state)) {
                 Log.println(":)");
                 return downloadResults(config.getGuruFrontendService(), reviewARN);
-            } else if ("Pending".equals(response.getCodeReview().getState())) {
+            } else if (JobState.PENDING.equals(state)) {
                 Log.print(".");
                 try {
                     Thread.sleep(TimeUnit.SECONDS.toMillis(WAIT_TIME_IN_SECONDS));
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
-            } else if ("Failed".equals(response.getCodeReview().getState())) {
+            } else if (JobState.FAILED.equals(state)) {
                 val msg = String.format("CodeGuru scan failed for ARN %s: %s%nCheck the AWS Console for more detail",
-                                        reviewARN, response.getCodeReview().getStateReason());
+                                        reviewARN, response.codeReview().stateReason());
                 throw new RuntimeException(msg);
             } else {
                 val msg = String.format("CodeGuru scan is in an unexpected state %s: %s%n"
                                         + "Check the AWS Console for more detail",
-                                        response.getCodeReview().getState(), response.getCodeReview().getStateReason());
+                                        state, response.codeReview().stateReason());
                 throw new RuntimeException(msg);
             }
             response = config.getGuruFrontendService().describeCodeReview(describeReviewRequest);
@@ -111,17 +113,12 @@ public final class ScanAdapter {
         throw new RuntimeException("Unable to find information for scan " + reviewARN);
     }
 
-    private static List<RecommendationSummary> downloadResults(final AmazonCodeGuruReviewer guruFrontendService,
+    private static List<RecommendationSummary> downloadResults(final CodeGuruReviewerClient guruFrontendService,
                                                                final String reviewARN) {
-        val listRequest = new ListRecommendationsRequest().withCodeReviewArn(reviewARN);
         val recommendations = new ArrayList<RecommendationSummary>();
-        String nextToken = null;
-        do {
-            listRequest.setNextToken(nextToken);
-            ListRecommendationsResult paginatedResult = guruFrontendService.listRecommendations(listRequest);
-            recommendations.addAll(paginatedResult.getRecommendationSummaries());
-            nextToken = paginatedResult.getNextToken();
-        } while(nextToken != null);
+        val listRequest = ListRecommendationsRequest.builder().codeReviewArn(reviewARN).build();
+        guruFrontendService.listRecommendationsPaginator(listRequest)
+                           .forEach(resp -> recommendations.addAll(resp.recommendationSummaries()));
         return recommendations;
     }
 
@@ -132,54 +129,64 @@ public final class ScanAdapter {
         final CodeArtifacts codeArtifacts;
         final AnalysisType[] analysisTypes;
         if (buildArtifactKey == null) {
-            codeArtifacts = new CodeArtifacts().withSourceCodeArtifactsObjectKey(sourceKey);
-            analysisTypes = new AnalysisType[]{AnalysisType.CodeQuality};
+            codeArtifacts = CodeArtifacts.builder().sourceCodeArtifactsObjectKey(sourceKey).build();
+            analysisTypes = new AnalysisType[]{AnalysisType.CODE_QUALITY};
         } else {
-            codeArtifacts = new CodeArtifacts().withSourceCodeArtifactsObjectKey(sourceKey)
-                                               .withBuildArtifactsObjectKey(buildArtifactKey);
-            analysisTypes = new AnalysisType[]{AnalysisType.Security, AnalysisType.CodeQuality};
+            codeArtifacts = CodeArtifacts.builder().sourceCodeArtifactsObjectKey(sourceKey)
+                                         .buildArtifactsObjectKey(buildArtifactKey)
+                                         .build();
+            analysisTypes = new AnalysisType[]{AnalysisType.SECURITY, AnalysisType.CODE_QUALITY};
         }
 
-        val s3repoDetails = new S3RepositoryDetails().withBucketName(association.getS3RepositoryDetails()
-                                                                                .getBucketName())
-                                                     .withCodeArtifacts(codeArtifacts);
-        val s3repo = new S3BucketRepository().withName(association.getName())
-                                             .withDetails(s3repoDetails);
+        val s3repoDetails = S3RepositoryDetails.builder().bucketName(association.s3RepositoryDetails()
+                                                                                .bucketName())
+                                               .codeArtifacts(codeArtifacts).build();
+        val s3repo = S3BucketRepository.builder().name(association.name())
+                                       .details(s3repoDetails).build();
 
         val sourceCodeType = getSourceCodeType(s3repo, gitMetaData);
 
-        val repoAnalysis = new RepositoryAnalysis().withSourceCodeType(sourceCodeType);
+        val repoAnalysis = RepositoryAnalysis.builder().sourceCodeType(sourceCodeType).build();
 
-        val reviewType = new CodeReviewType().withRepositoryAnalysis(repoAnalysis)
-                                             .withAnalysisTypes(analysisTypes);
+        val reviewType = CodeReviewType.builder().repositoryAnalysis(repoAnalysis)
+                                       .analysisTypes(analysisTypes)
+                                       .build();
 
-        return new CreateCodeReviewRequest().withType(reviewType)
-                                            .withName(SCAN_PREFIX_NAME + UUID.randomUUID().toString())
-                                            .withRepositoryAssociationArn(association.getAssociationArn());
+        return CreateCodeReviewRequest.builder().type(reviewType)
+                                      .name(SCAN_PREFIX_NAME + UUID.randomUUID().toString())
+                                      .repositoryAssociationArn(association.associationArn())
+                                      .build();
     }
 
     private static SourceCodeType getSourceCodeType(final S3BucketRepository s3BucketRepository,
                                                     final GitMetaData gitMetaData) {
 
         val hasDiff = gitMetaData.getBeforeCommit() != null && gitMetaData.getAfterCommit() != null;
-        val eventInfo = hasDiff ? new EventInfo().withName("push") : new EventInfo().withName("schedule");
-        val requestMetaData = new RequestMetadata().withRequestId(gitMetaData.getPullRequestId())
-                                                   .withEventInfo(eventInfo)
-                                                   .withRequester(gitMetaData.getUserName())
-                                                   .withVendorName(VendorName.GitHub);
+        val eventInfo = hasDiff ? EventInfo.builder().name("push").build() :
+                        EventInfo.builder().name("schedule").build();
+        val requestMetaData = RequestMetadata.builder().requestId(gitMetaData.getPullRequestId())
+                                             .eventInfo(eventInfo)
+                                             .requester(gitMetaData.getUserName())
+                                             .vendorName(VendorName.GIT_HUB)
+                                             .build();
         if (hasDiff) {
-            val commitDiff = new CommitDiffSourceCodeType().withSourceCommit(gitMetaData.getAfterCommit())
-                                                           .withDestinationCommit(gitMetaData.getBeforeCommit());
-            val repoHead = new RepositoryHeadSourceCodeType().withBranchName(gitMetaData.getCurrentBranch());
-            return new SourceCodeType().withS3BucketRepository(s3BucketRepository)
-                                       .withCommitDiff(commitDiff)
-                                       .withRepositoryHead(repoHead)
-                                       .withRequestMetadata(requestMetaData);
+            val commitDiff = CommitDiffSourceCodeType.builder().sourceCommit(gitMetaData.getAfterCommit())
+                                                     .destinationCommit(gitMetaData.getBeforeCommit())
+                                                     .build();
+            val repoHead =
+                RepositoryHeadSourceCodeType.builder().branchName(gitMetaData.getCurrentBranch()).build();
+            return SourceCodeType.builder().s3BucketRepository(s3BucketRepository)
+                                 .commitDiff(commitDiff)
+                                 .repositoryHead(repoHead)
+                                 .requestMetadata(requestMetaData)
+                                 .build();
         } else {
-            val repoHead = new RepositoryHeadSourceCodeType().withBranchName(gitMetaData.getCurrentBranch());
-            return new SourceCodeType().withS3BucketRepository(s3BucketRepository)
-                                       .withRepositoryHead(repoHead)
-                                       .withRequestMetadata(requestMetaData);
+            val repoHead =
+                RepositoryHeadSourceCodeType.builder().branchName(gitMetaData.getCurrentBranch()).build();
+            return SourceCodeType.builder().s3BucketRepository(s3BucketRepository)
+                                 .repositoryHead(repoHead)
+                                 .requestMetadata(requestMetaData)
+                                 .build();
         }
     }
 

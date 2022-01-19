@@ -6,9 +6,8 @@ import java.nio.file.Path;
 import lombok.Builder;
 import lombok.Data;
 import org.beryx.textio.TextIO;
-
-import com.amazonaws.services.codegurureviewer.AmazonCodeGuruReviewer;
-import com.amazonaws.services.s3.AmazonS3;
+import software.amazon.awssdk.services.codegurureviewer.CodeGuruReviewerClient;
+import software.amazon.awssdk.services.s3.S3Client;
 
 /**
  * Class to hold all shared configuration data. This object is mutable and information is added as it becomes
@@ -20,9 +19,9 @@ public class Configuration {
 
     private boolean interactiveMode;
 
-    private AmazonCodeGuruReviewer guruFrontendService;
+    private CodeGuruReviewerClient guruFrontendService;
 
-    private AmazonS3 s3Client;
+    private S3Client s3Client;
 
     private String accountId;
 
