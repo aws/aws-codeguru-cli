@@ -29,6 +29,8 @@ public class Configuration {
 
     private String repoName;
 
+    private String keyId;
+
     private Path rootDir;
 
     private TextIO textIO;

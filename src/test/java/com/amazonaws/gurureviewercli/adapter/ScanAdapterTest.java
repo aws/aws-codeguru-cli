@@ -19,6 +19,7 @@ import software.amazon.awssdk.services.codegurureviewer.model.DescribeRepository
 import software.amazon.awssdk.services.codegurureviewer.model.ListRepositoryAssociationsRequest;
 import software.amazon.awssdk.services.codegurureviewer.model.ListRepositoryAssociationsResponse;
 import software.amazon.awssdk.services.codegurureviewer.model.RepositoryAssociation;
+import software.amazon.awssdk.services.codegurureviewer.model.RepositoryAssociationState;
 import software.amazon.awssdk.services.codegurureviewer.model.RepositoryAssociationSummary;
 import software.amazon.awssdk.services.codegurureviewer.model.S3RepositoryDetails;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -46,15 +47,18 @@ class ScanAdapterTest {
         val repoDetails = S3RepositoryDetails.builder().bucketName(bucketName).build();
         val expected = RepositoryAssociation.builder().associationArn(fakeArn)
                                             .s3RepositoryDetails(repoDetails)
+                                            .state(RepositoryAssociationState.ASSOCIATED)
                                             .build();
-        val summary = RepositoryAssociationSummary.builder().associationArn(fakeArn).build();
+        val summary = RepositoryAssociationSummary.builder()
+                                                  .associationArn(fakeArn)
+                                                  .state(RepositoryAssociationState.ASSOCIATED)
+                                                  .build();
         val response = ListRepositoryAssociationsResponse.builder().repositoryAssociationSummaries(summary).build();
         when(guruFrontendService.listRepositoryAssociations(any(ListRepositoryAssociationsRequest.class)))
             .thenReturn(response);
         val describeResponse = DescribeRepositoryAssociationResponse.builder().repositoryAssociation(expected).build();
         when(guruFrontendService.describeRepositoryAssociation(any(DescribeRepositoryAssociationRequest.class)))
             .thenReturn(describeResponse);
-
         val review = CodeReview.builder().codeReviewArn(fakeArn).build();
         val crResponse = CreateCodeReviewResponse.builder().codeReview(review).build();
         when(guruFrontendService.createCodeReview(any(CreateCodeReviewRequest.class))).thenReturn(crResponse);

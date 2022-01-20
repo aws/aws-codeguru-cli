@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.codegurureviewer.model.DescribeRepository
 import software.amazon.awssdk.services.codegurureviewer.model.ListRepositoryAssociationsRequest;
 import software.amazon.awssdk.services.codegurureviewer.model.ListRepositoryAssociationsResponse;
 import software.amazon.awssdk.services.codegurureviewer.model.RepositoryAssociation;
+import software.amazon.awssdk.services.codegurureviewer.model.RepositoryAssociationState;
 import software.amazon.awssdk.services.codegurureviewer.model.RepositoryAssociationSummary;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
@@ -42,8 +43,14 @@ class AssociationAdapterTest {
     @Test
     public void test_getAssociatedGuruRepo_associationExists() {
         val fakeArn = "123";
-        val expected = RepositoryAssociation.builder().associationArn(fakeArn).build();
-        val summary = RepositoryAssociationSummary.builder().associationArn(fakeArn).build();
+        val expected = RepositoryAssociation.builder()
+                                            .associationArn(fakeArn)
+                                            .state(RepositoryAssociationState.ASSOCIATED)
+                                            .build();
+        val summary = RepositoryAssociationSummary.builder()
+                                                  .associationArn(fakeArn)
+                                                  .state(RepositoryAssociationState.ASSOCIATED)
+                                                  .build();
         val response = ListRepositoryAssociationsResponse.builder().repositoryAssociationSummaries(summary).build();
         when(guruFrontendService.listRepositoryAssociations(any(ListRepositoryAssociationsRequest.class)))
             .thenReturn(response);
@@ -62,7 +69,10 @@ class AssociationAdapterTest {
     public void test_getAssociatedGuruRepo_createNewWithExistingBucket() {
         val bucketName = "some-bucket";
         val fakeArn = "123";
-        val expected = RepositoryAssociation.builder().associationArn(fakeArn).build();
+        val expected = RepositoryAssociation.builder()
+                                            .associationArn(fakeArn)
+                                            .state(RepositoryAssociationState.ASSOCIATED)
+                                            .build();
         val emptyListResponse =
             ListRepositoryAssociationsResponse.builder()
                                               .repositoryAssociationSummaries(Collections.emptyList())
@@ -72,6 +82,8 @@ class AssociationAdapterTest {
         when(s3client.headBucket(any(HeadBucketRequest.class))).thenReturn(HeadBucketResponse.builder().build());
         when(guruFrontendService.associateRepository(any(AssociateRepositoryRequest.class)))
             .thenReturn(AssociateRepositoryResponse.builder().repositoryAssociation(expected).build());
+        when(guruFrontendService.describeRepositoryAssociation(any(DescribeRepositoryAssociationRequest.class)))
+            .thenReturn(DescribeRepositoryAssociationResponse.builder().repositoryAssociation(expected).build());
         val config = Configuration.builder()
                                   .guruFrontendService(guruFrontendService)
                                   .interactiveMode(false)
@@ -88,7 +100,10 @@ class AssociationAdapterTest {
         // return anything
         val bucketName = "some-bucket";
         val fakeArn = "123";
-        val expected = RepositoryAssociation.builder().associationArn(fakeArn).build();
+        val expected = RepositoryAssociation.builder()
+                                            .associationArn(fakeArn)
+                                            .state(RepositoryAssociationState.ASSOCIATED)
+                                            .build();
         val emptyListResponse =
             ListRepositoryAssociationsResponse.builder()
                                               .repositoryAssociationSummaries(Collections.emptyList())
@@ -98,6 +113,8 @@ class AssociationAdapterTest {
         when(s3client.headBucket(any(HeadBucketRequest.class))).thenThrow(NoSuchBucketException.class);
         when(guruFrontendService.associateRepository(any(AssociateRepositoryRequest.class)))
             .thenReturn(AssociateRepositoryResponse.builder().repositoryAssociation(expected).build());
+        when(guruFrontendService.describeRepositoryAssociation(any(DescribeRepositoryAssociationRequest.class)))
+            .thenReturn(DescribeRepositoryAssociationResponse.builder().repositoryAssociation(expected).build());
         val config = Configuration.builder()
                                   .guruFrontendService(guruFrontendService)
                                   .interactiveMode(false)
@@ -112,7 +129,11 @@ class AssociationAdapterTest {
     public void test_getAssociatedGuruRepo_createNewWithCreateBucketInteractive() {
         val bucketName = "some-bucket";
         val fakeArn = "123";
-        val expected = RepositoryAssociation.builder().associationArn(fakeArn).build();
+        val expected = RepositoryAssociation.builder()
+                                            .associationArn(fakeArn)
+                                            .state(RepositoryAssociationState.ASSOCIATED)
+                                            .build();
+
         val emptyListResponse =
             ListRepositoryAssociationsResponse.builder()
                                               .repositoryAssociationSummaries(Collections.emptyList())
@@ -122,6 +143,8 @@ class AssociationAdapterTest {
         when(s3client.headBucket(any(HeadBucketRequest.class))).thenThrow(NoSuchBucketException.class);
         when(guruFrontendService.associateRepository(any(AssociateRepositoryRequest.class)))
             .thenReturn(AssociateRepositoryResponse.builder().repositoryAssociation(expected).build());
+        when(guruFrontendService.describeRepositoryAssociation(any(DescribeRepositoryAssociationRequest.class)))
+            .thenReturn(DescribeRepositoryAssociationResponse.builder().repositoryAssociation(expected).build());
 
         val mockTerminal = new MockTextTerminal();
         mockTerminal.getInputs().add("y");

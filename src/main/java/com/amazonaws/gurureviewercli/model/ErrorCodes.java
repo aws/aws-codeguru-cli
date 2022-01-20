@@ -7,6 +7,7 @@ import lombok.Getter;
  */
 public enum ErrorCodes {
 
+    ASSOCIATION_FAILED("Failed to associate with CodeGuru"),
     GIT_INVALID_DIR("Invalid Git Directory"),
     GIT_BRANCH_MISSING("Cannot determine Git branch"),
     DIR_NOT_FOUND("Provided path is not a valid directory"),

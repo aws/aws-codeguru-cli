@@ -81,6 +81,9 @@ public class Main {
                              + " is provided, the CLI will create a bucket automatically.")
     private String bucketName;
 
+    @Parameter(names = {"--kms-key-id", "-kms"},
+               description = "KMS Key ID to encrypt source and build artifacts in S3")
+    private String kmsKeyId;
 
     public static void main(String[] argv) {
         val textIO = new TextIO(new SystemTextTerminal());
@@ -175,7 +178,7 @@ public class Main {
         }
         config.setRootDir(Paths.get(repoDir).toAbsolutePath().normalize());
         if (this.sourceDirs == null || this.sourceDirs.isEmpty()) {
-            this.sourceDirs = Arrays.asList(repoDir);
+            this.sourceDirs = Arrays.asList(config.getRootDir().toString());
         }
         sourceDirs.forEach(sourceDir -> {
             if (!Paths.get(sourceDir).toFile().isDirectory()) {
@@ -191,6 +194,7 @@ public class Main {
                 }
             });
         }
+        config.setKeyId(this.kmsKeyId);
     }
 
     private void tryDeleteS3Object(final S3Client s3Client, final String s3Bucket, final String s3Key) {
