@@ -1,13 +1,13 @@
 # CodeGuru Reviewer CLI Wrapper
 Simple CLI wrapper for CodeGuru reviewer that provides a one-line command to scan a local clone of a repository and
 receive results. This CLI wraps the [AWS CLI](https://aws.amazon.com/cli/) commands to communicated with 
-[AWS CodeGuru Reviewer](https://aws.amazon.com/codeguru/). Using CodeGuru Reviewer may generated metering fees
+[AWS CodeGuru Reviewer](https://aws.amazon.com/codeguru/). Using CodeGuru Reviewer may generate metering fees
 in your AWS account. See the [CodeGuru Reviewer pricing](https://aws.amazon.com/codeguru/pricing/) for details.
 
 ### Before you start
 
 Before we start, let's make sure that you can access an AWS account from your computer. 
-Follow the credentials setup process for the for the [AWS CLI](https://github.com/aws/aws-cli#configuration).
+Follow the credential setup process for the [AWS CLI](https://github.com/aws/aws-cli#configuration).
 The credentials must have at least the following permissions:
 
 ```json
@@ -32,7 +32,8 @@ The credentials must have at least the following permissions:
                 "s3:GetBucket*",
                 "s3:List*",
                 "s3:GetObject",
-                "s3:PutObject"
+                "s3:PutObject",
+                "s3:DeleteObject"
             ],
             "Resource": [
                 "arn:aws:s3:::codeguru-reviewer-cli-*",

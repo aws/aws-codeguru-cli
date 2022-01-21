@@ -202,7 +202,7 @@ public class Main {
             if (s3Key != null) {
                 s3Client.deleteObject(DeleteObjectRequest.builder().bucket(s3Bucket).key(s3Key).build());
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             Log.warn("Failed to delete %s from %s. Please delete the object by hand.", s3Key, s3Bucket);
         }
     }
