@@ -48,10 +48,10 @@ The credentials must have at least the following permissions:
 
 ### Download the CLI and scan an Example
 
-You can download the [aws-codeguru-cli](releases/download/latest/aws-codeguru-cli.zip) from the releases section.
+You can download the [aws-codeguru-cli](https://github.com/aws/aws-codeguru-cli/releases/latest) from the releases section.
 Download the latest version and add it to your `PATH`:
 ```
-curl -OL https://github.com/martinschaef/aws-codeguru-cli/releases/download/latest/aws-codeguru-cli.zip
+curl -OL https://github.com/aws/aws-codeguru-cli/releases/download/0.0.1/aws-codeguru-cli.zip
 unzip aws-codeguru-cli.zip
 export PATH=$PATH:./aws-codeguru-cli/bin
 ```
