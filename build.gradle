@@ -1,0 +1,94 @@
+
+buildscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+    classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:5.0.3"
+  }
+}
+
+/*
+ Applies core Gradle plugins, which are ones built into Gradle itself.
+*/
+plugins {
+    // Java for compile and unit test of Java source files. Read more at:
+    // https://docs.gradle.org/current/userguide/java_plugin.html
+    id 'java'
+
+    // Checkstyle for style checks and reports on Java source files. Read more at:
+    // https://docs.gradle.org/current/userguide/checkstyle_plugin.html
+    id 'checkstyle'
+
+    id 'application'
+}
+
+// SpotBugs for quality checks and reports of source files. Read more at:
+// https://spotbugs.readthedocs.io/en/stable/gradle.html
+apply plugin: 'com.github.spotbugs'
+
+checkstyle {
+    sourceSets = [sourceSets.main]
+    ignoreFailures = false
+}
+
+spotbugs {
+    ignoreFailures.set(false)
+}
+
+repositories {
+    mavenCentral()
+}
+
+defaultTasks('installDist')
+
+version = '0.0.1'
+jar.archiveName = "${jar.baseName}.${jar.extension}"
+distZip.archiveName = "${jar.baseName}.zip"
+
+application {
+    mainClass = 'com.amazonaws.gurureviewercli.Main'
+}
+
+dependencies {
+    implementation 'software.amazon.awssdk:s3:2.17.113'
+    implementation 'software.amazon.awssdk:sts:2.17.113'
+    implementation 'software.amazon.awssdk:codegurureviewer:2.17.113'
+    implementation 'software.amazon.awssdk:sdk-core:2.17.113'
+
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.13.0'
+
+    implementation 'com.beust:jcommander:1.81'
+
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r'
+
+    implementation 'org.apache.logging.log4j:log4j-core:2.17.1'
+    implementation 'org.slf4j:slf4j-nop:2.0.0-alpha5'
+
+    // For Java 9+
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+
+    implementation 'org.commonmark:commonmark:0.18.1'
+
+    implementation 'org.beryx:text-io:3.4.1'
+
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+    
+    testCompileOnly 'org.projectlombok:lombok:1.18.22'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.2.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+
