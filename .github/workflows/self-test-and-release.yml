@@ -1,10 +1,7 @@
 # Created using https://github.com/aws-samples/aws-codeguru-reviewer-cicd-cdk-sample
 name: Self-test and release
 
-on:
-  push:
-    branches:
-      - main
+on: [push, pull_request, workflow_dispatch]
 
 permissions:
     id-token: write

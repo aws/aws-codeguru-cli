@@ -72,7 +72,53 @@ located under `./src`. The option `--output ./output` specifies where CodeGuru s
 CodeGuru produces a Json and Html report.
 
 You can provide your own bucket name using the `--bucket-name` option. Note that, currently, CodeGuru Reviewer only
-accepts bucket names that start with the prefix `codeguru-reviewer-`.
+supports bucket names that start with the prefix `codeguru-reviewer-` out of the box. If you choose a different naming
+pattern for your bucket you need to:
+1. Grant `S3:GetObject` permissions on their S3 bucket to `codeguru-reviewer.amazonaws.com`
+2. If you are using SSE on the S3 bucket, Grant `KMS::Decrypt` permissions to `codeguru-reviewer.amazonaws.com`
+
+### Using Encryption
+
+CodeGuru Reviewer allows you to use a customer managed key (CMCMK) to encrypt content of the S3 bucket that is used 
+store source and build artifacts, and all metadata and recommendations that are produced by CodeGuru Reviewer. 
+First, create a customer owned key in KMS.
+You need to grant CodeGuru Reviewer permission to decrypt artifacts with this key by adding the 
+following Statement to your Key policy:
+
+```json
+{
+    "Sid": "Allow CodeGuru to use the key to decrypt artifact",
+    "Effect": "Allow",
+    "Principal": {
+        "AWS": "*"
+    },
+    "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey"
+    ],
+    "Resource": "*",
+    "Condition": {
+        "StringEquals": {
+            "kms:ViaService": "codeguru-reviewer.amazonaws.com",
+            "kms:CallerAccount": [Your AWS ACCOUNT ID]
+        }
+    }
+}
+```
+Then, enable server-side for the bucket that you are using with CodeGuru Reviewer. The bucket name should be
+`codeguru-reviewer-cli-[YOUR ACCOUNT]-[YOUR REGION]`, unless you provided a custom name. For encryption, use the
+KMS key that you created in the previous step.
+
+Now you can analyze a repository by providing the KMS key ID (not the alias). For example:
+```
+ codeguru-reviewer -r ./ -kms 12345678-abcd-abcd-1234-1234567890ab
+```
+The first time you analyze a repository with the CodeGuru Reviewer CLI, a new association will be created and
+the provided key will be associated with this repository. Fur subsequent scans, you do not need to provide the 
+key again. Note that you can start using a key after the repository is already associated. If you want to switch
+from not using a key to using a key, you need to delete the existing association first in the AWS Console and
+then trigger a new scan with the CLI where you provide the key.
+
 
 ### Running from CI/CD
 
