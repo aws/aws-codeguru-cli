@@ -74,20 +74,20 @@ CodeGuru produces a Json and Html report.
 You can provide your own bucket name using the `--bucket-name` option. Note that, currently, CodeGuru Reviewer only
 supports bucket names that start with the prefix `codeguru-reviewer-` out of the box. If you choose a different naming
 pattern for your bucket you need to:
-1. Grant `S3:GetObject` permissions on their S3 bucket to `codeguru-reviewer.amazonaws.com`
-2. If you are using SSE on the S3 bucket, Grant `KMS::Decrypt` permissions to `codeguru-reviewer.amazonaws.com`
+1. Grant `S3:GetObject` permissions on the S3 bucket to `codeguru-reviewer.amazonaws.com`
+2. If you are using SSE in the S3 bucket, grant `KMS::Decrypt` permissions to `codeguru-reviewer.amazonaws.com`
 
 ### Using Encryption
 
-CodeGuru Reviewer allows you to use a customer managed key (CMCMK) to encrypt content of the S3 bucket that is used 
+CodeGuru Reviewer allows you to use a customer managed key (CMCMK) to encrypt the contents of the S3 bucket that is used 
 to store source and build artifacts, and all metadata and recommendations that are produced by CodeGuru Reviewer. 
-First, create a customer owned key in KMS.
-You need to grant CodeGuru Reviewer permission to decrypt artifacts with this key by adding the 
+First, create a customer managed key in KMS.
+You will need to grant CodeGuru Reviewer permission to decrypt artifacts with this key by adding the 
 following Statement to your Key policy:
 
 ```json
 {
-    "Sid": "Allow CodeGuru to use the key to decrypt artifact",
+    "Sid": "Allow CodeGuru to use the key to decrypt artifacts",
     "Effect": "Allow",
     "Principal": {
         "AWS": "*"
@@ -105,7 +105,7 @@ following Statement to your Key policy:
     }
 }
 ```
-Then, enable server-side for the bucket that you are using with CodeGuru Reviewer. The bucket name should be
+Then, enable server-side encryption for the bucket that you are using with CodeGuru Reviewer. The bucket name should be
 `codeguru-reviewer-cli-[YOUR ACCOUNT]-[YOUR REGION]`, unless you provided a custom name. For encryption, use the
 KMS key that you created in the previous step.
 
@@ -143,7 +143,7 @@ and now run your local build with:
 ```
 ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli
 ```
-you can run a self-test with:
+You can run a self-test with:
 ```
 ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli -r . -s src/main/java -b build/libs -c HEAD^:HEAD
 ```
