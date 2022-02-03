@@ -80,7 +80,7 @@ pattern for your bucket you need to:
 ### Using Encryption
 
 CodeGuru Reviewer allows you to use a customer managed key (CMCMK) to encrypt content of the S3 bucket that is used 
-store source and build artifacts, and all metadata and recommendations that are produced by CodeGuru Reviewer. 
+to store source and build artifacts, and all metadata and recommendations that are produced by CodeGuru Reviewer. 
 First, create a customer owned key in KMS.
 You need to grant CodeGuru Reviewer permission to decrypt artifacts with this key by adding the 
 following Statement to your Key policy:
