@@ -78,10 +78,6 @@ public final class AssociationAdapter {
     private static RepositoryAssociation createBucketAndAssociation(final Configuration config) {
         final String bucketName;
         if (config.getBucketName() != null) {
-            if (!config.getBucketName().startsWith("codeguru-reviewer-")) {
-                throw new GuruCliException(ErrorCodes.BAD_BUCKET_NAME,
-                                           config.getBucketName() + " is not a valid bucket name for CodeGuru.");
-            }
             bucketName = config.getBucketName();
         } else {
             bucketName = String.format(BUCKET_NAME_PATTERN, config.getAccountId(), config.getRegion());

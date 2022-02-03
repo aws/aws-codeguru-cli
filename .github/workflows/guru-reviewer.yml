@@ -1,7 +1,7 @@
 # Created using https://github.com/aws-samples/aws-codeguru-reviewer-cicd-cdk-sample
 name: Analyze with CodeGuru Reviewer
 
-on: [push]
+on: [push, pull_request, workflow_dispatch]
 
 permissions:
     id-token: write
