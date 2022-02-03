@@ -170,7 +170,7 @@ public class Main {
     private void validateInitialConfig(final Configuration config) {
         if (config.getBucketName() != null && !config.getBucketName().startsWith("codeguru-reviewer-")) {
             Log.warn("CodeGuru Reviewer has default settings only for buckets that are prefixed with "
-                     + "codeguru-reviewer. If you choose a different, read the instructions in the README.");
+                     + "codeguru-reviewer. If you choose a different name, read the instructions in the README.");
         }
         if (!Paths.get(repoDir).toFile().isDirectory()) {
             throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
