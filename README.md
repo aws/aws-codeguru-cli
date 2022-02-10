@@ -111,7 +111,7 @@ KMS key that you created in the previous step.
 
 Now you can analyze a repository by providing the KMS key ID (not the alias). For example:
 ```
- codeguru-reviewer -r ./ -kms 12345678-abcd-abcd-1234-1234567890ab
+ aws-codeguru-cli -r ./ -kms 12345678-abcd-abcd-1234-1234567890ab
 ```
 The first time you analyze a repository with the CodeGuru Reviewer CLI, a new association will be created and
 the provided key will be associated with this repository. Fur subsequent scans, you do not need to provide the 
