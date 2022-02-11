@@ -21,7 +21,8 @@ The credentials must have at least the following permissions:
                 "codeguru-reviewer:DescribeRepositoryAssociation",
                 "codeguru-reviewer:CreateCodeReview",
                 "codeguru-reviewer:DescribeCodeReview",
-                "codeguru-reviewer:ListRecommendations"
+                "codeguru-reviewer:ListRecommendations",
+                "iam:CreateServiceLinkedRole"
             ],
             "Resource": "*",
             "Effect": "Allow"
