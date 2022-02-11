@@ -141,6 +141,7 @@ public class Main {
         } catch (GuruCliException e) {
             Log.error("%s: %s", e.getErrorCode(), e.getMessage());
             e.printStackTrace();
+            System.exit(3);
         } catch (ParameterException e) {
             Log.error(e);
             jCommander.usage();
