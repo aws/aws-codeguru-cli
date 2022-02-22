@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import com.amazonaws.gurureviewercli.model.Configuration;
 import com.amazonaws.gurureviewercli.model.ScanMetaData;
+import com.amazonaws.gurureviewercli.util.Log;
 import com.amazonaws.gurureviewercli.util.ZipUtils;
 
 /**
@@ -54,11 +55,15 @@ public final class ArtifactAdapter {
             }
             final String sourceKey;
             if (scanVersionedFilesOnly) {
-                val filesToScan = new ArrayList<Path>(config.getVersionedFiles());
-
+                val filesToScan = new ArrayList<Path>(ZipUtils.getFilesInDirectories(sourceDirs));
+                val totalFiles = filesToScan.size();
+                filesToScan.retainAll(config.getVersionedFiles()); // only keep versioned files.
+                val versionedFiles = filesToScan.size();
+                Log.info("Found %d out of %d files under version control in %s",
+                         versionedFiles, totalFiles, repositoryDir.toAbsolutePath());
                 filesToScan.addAll(ZipUtils.getFilesInDirectory(repositoryDir.resolve(".git")));
-                sourceKey = "";
-                throw new RuntimeException("Not implemented");
+                sourceKey = zipAndUploadFiles("analysis-src-" + UUID.randomUUID(), filesToScan, repositoryDir,
+                                              bucketName, tempDir, config.getAccountId(), config.getS3Client());
             } else {
                 val sourceDirsAndGit = new ArrayList<Path>(sourceDirs);
                 if (config.getBeforeCommit() != null && config.getAfterCommit() != null) {
@@ -137,6 +142,30 @@ public final class ArtifactAdapter {
         return null;
     }
 
+    private static String zipAndUploadFiles(final String artifactName,
+                                            final List<Path> files,
+                                            final Path rootDir,
+                                            final String bucketName,
+                                            final Path tempDir,
+                                            final String accountId,
+                                            final S3Client s3Client) throws IOException {
+        if (files != null && rootDir != null) {
+            val zipFileName = artifactName + ".zip";
+            val zipFile = tempDir.resolve(zipFileName).toAbsolutePath();
+            val s3Key = zipFileName;
+            if (!zipFile.toFile().isFile()) {
+                ZipUtils.packFiles(files, rootDir, zipFile);
+            }
+            val putObjectRequest = PutObjectRequest.builder()
+                                                   .bucket(bucketName)
+                                                   .key(s3Key)
+                                                   .expectedBucketOwner(accountId)
+                                                   .build();
+            s3Client.putObject(putObjectRequest, zipFile);
+            return s3Key;
+        }
+        return null;
+    }
 
     private ArtifactAdapter() {
         // do not instantiate

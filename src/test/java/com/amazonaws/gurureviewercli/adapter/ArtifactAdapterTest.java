@@ -43,7 +43,6 @@ class ArtifactAdapterTest {
                                   .s3Client(s3client)
                                   .build();
         Answer<Object> answer = invocationOnMock -> {
-            System.err.println(invocationOnMock);
             Path filePath = invocationOnMock.getArgument(1);
             Assertions.assertTrue(filePath.toFile().isFile());
             try (val zipFile = new ZipFile(filePath.toFile())) {
@@ -73,15 +72,21 @@ class ArtifactAdapterTest {
         val tempDir = Files.createTempDirectory("test_zipAndUpload_happyCaseGitFilesOnly");
         val bucketName = "some-bucket";
 
-        val sourceDirs = Arrays.asList(Paths.get("src"));
+        // only include files from the util dir.
+        val expectedSrcDir = Paths.get("src/main/java/com/amazonaws/gurureviewercli/util");
+        val sourceDirs = Arrays.asList(expectedSrcDir);
         final List<Path> buildDirs = Collections.emptyList();
+
+        val file1 = Paths.get("src/main/java/com/amazonaws/gurureviewercli/util/Log.java").toAbsolutePath();
+        val file2 = Paths.get("src/main/java/com/amazonaws/gurureviewercli/Main.java").toAbsolutePath();
+
         val config = Configuration.builder()
                                   .s3Client(s3client)
-                                  .versionedFiles(Arrays.asList(Paths.get("src/main/java/com/amazonaws/"
-                                                                          + "gurureviewercli/Main.java")))
+                                  // Log.java is in the versionedFiles and sourceDirs, so only this file should be
+                                  // included in the zip.
+                                  .versionedFiles(Arrays.asList(file1, file2))
                                   .build();
         Answer<Object> answer = invocationOnMock -> {
-            System.err.println(invocationOnMock);
             Path filePath = invocationOnMock.getArgument(1);
             Assertions.assertTrue(filePath.toFile().isFile());
             try (val zipFile = new ZipFile(filePath.toFile())) {
@@ -91,6 +96,10 @@ class ArtifactAdapterTest {
                     val original = repoDir.resolve(s).toFile();
                     Assertions.assertTrue(original.isFile(), "Not a valid file: " + original);
                     Assertions.assertFalse(s.startsWith(".."));
+                    if (s.endsWith(".java")) {
+                        // ensure that only the versioned file from the src-dir was included.
+                        Assertions.assertTrue(s.endsWith("Log.java"));
+                    }
                 }
             }
             return null;

@@ -64,7 +64,7 @@ public final class ZipUtils {
                             final String zipFilePath) throws IOException {
 
         val files = getFilesInDirectories(sourceDirPaths);
-        packFiles(files, relativeRoot, zipFilePath);
+        packFiles(files, relativeRoot, Paths.get(zipFilePath));
     }
 
     /**
@@ -77,7 +77,7 @@ public final class ZipUtils {
      */
     public static void packFiles(final Collection<Path> files,
                                  final Path relativeRoot,
-                                 final String zipFilePath) throws IOException {
+                                 final Path zipFilePath) throws IOException {
         val normalizedRoot = relativeRoot.toAbsolutePath().normalize();
         val normalizedFiles = files.stream()
                                    .map(Path::toAbsolutePath)
@@ -89,7 +89,7 @@ public final class ZipUtils {
                 throw new RuntimeException(msg);
             }
         });
-        Path zipFile = Files.createFile(Paths.get(zipFilePath));
+        Path zipFile = Files.createFile(zipFilePath);
         try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(zipFile))) {
             for (val file : normalizedFiles) {
                 val relPath = normalizedRoot.relativize(file).normalize().toString();
