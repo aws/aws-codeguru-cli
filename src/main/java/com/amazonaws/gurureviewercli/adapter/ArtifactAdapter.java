@@ -139,7 +139,6 @@ public final class ArtifactAdapter {
                     ZipUtils.pack(dirNames, zipFile.toString());
                 }
             }
-            Log.info("Uploading %s", zipFile);
             val putObjectRequest = PutObjectRequest.builder()
                                                    .bucket(bucketName)
                                                    .key(s3Key)
@@ -165,7 +164,6 @@ public final class ArtifactAdapter {
             if (!zipFile.toFile().isFile()) {
                 ZipUtils.packFiles(files, rootDir, zipFile);
             }
-            Log.info("Uploading %s", zipFile);
             val putObjectRequest = PutObjectRequest.builder()
                                                    .bucket(bucketName)
                                                    .key(s3Key)
