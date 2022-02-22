@@ -14,7 +14,9 @@ import lombok.val;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import com.amazonaws.gurureviewercli.exceptions.GuruCliException;
 import com.amazonaws.gurureviewercli.model.Configuration;
+import com.amazonaws.gurureviewercli.model.ErrorCodes;
 import com.amazonaws.gurureviewercli.model.ScanMetaData;
 import com.amazonaws.gurureviewercli.util.Log;
 import com.amazonaws.gurureviewercli.util.ZipUtils;
@@ -59,7 +61,13 @@ public final class ArtifactAdapter {
                 val totalFiles = filesToScan.size();
                 filesToScan.retainAll(config.getVersionedFiles()); // only keep versioned files.
                 val versionedFiles = filesToScan.size();
-                Log.info("Found %d out of %d files under version control in %s",
+                if (versionedFiles == 0) {
+                    Log.error(sourceDirs.toString());
+                    Log.error(config.getVersionedFiles().toString());
+                    throw new GuruCliException(ErrorCodes.GIT_EMPTY_DIFF,
+                                               "No versioned files to analyze in directories: " + sourceDirs);
+                }
+                Log.info("Adding %d out of %d files under version control in %s",
                          versionedFiles, totalFiles, repositoryDir.toAbsolutePath());
                 filesToScan.addAll(ZipUtils.getFilesInDirectory(repositoryDir.resolve(".git")));
                 sourceKey = zipAndUploadFiles("analysis-src-" + UUID.randomUUID(), filesToScan, repositoryDir,
@@ -131,6 +139,7 @@ public final class ArtifactAdapter {
                     ZipUtils.pack(dirNames, zipFile.toString());
                 }
             }
+            Log.info("Uploading %s", zipFile);
             val putObjectRequest = PutObjectRequest.builder()
                                                    .bucket(bucketName)
                                                    .key(s3Key)
@@ -156,6 +165,7 @@ public final class ArtifactAdapter {
             if (!zipFile.toFile().isFile()) {
                 ZipUtils.packFiles(files, rootDir, zipFile);
             }
+            Log.info("Uploading %s", zipFile);
             val putObjectRequest = PutObjectRequest.builder()
                                                    .bucket(bucketName)
                                                    .key(s3Key)

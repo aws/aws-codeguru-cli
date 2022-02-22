@@ -100,6 +100,7 @@ public final class GitAdapter {
         if (headCommitId == null) {
             return Collections.emptySet();
         }
+        val rootDir = repository.getWorkTree().toPath();
         RevWalk revWalk = new RevWalk(repository);
         RevCommit commit = revWalk.parseCommit(headCommitId);
         val treeWalk = new TreeWalk(repository);
@@ -110,7 +111,7 @@ public final class GitAdapter {
             if (treeWalk.isSubtree()) {
                 treeWalk.enterSubtree();
             } else {
-                val normalizedPath = repository.getDirectory().toPath().resolve(treeWalk.getPathString())
+                val normalizedPath = rootDir.resolve(treeWalk.getPathString())
                                                .toAbsolutePath().normalize();
                 allFiles.add(normalizedPath);
             }
