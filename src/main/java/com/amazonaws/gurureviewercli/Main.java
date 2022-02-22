@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -116,7 +117,13 @@ public class Main {
             ScanMetaData scanMetaData = null;
             List<RecommendationSummary> results = new ArrayList<>();
             try {
-                scanMetaData = ScanAdapter.startScan(config, gitMetaData, main.sourceDirs, main.buildDirs);
+                val sourcePaths = main.sourceDirs.stream()
+                                                 .map(Paths::get).map(Path::toAbsolutePath).map(Path::normalize)
+                                                 .collect(Collectors.toList());
+                val buildPaths = main.sourceDirs.stream()
+                                                .map(Paths::get).map(Path::toAbsolutePath).map(Path::normalize)
+                                                .collect(Collectors.toList());
+                scanMetaData = ScanAdapter.startScan(config, gitMetaData, sourcePaths, buildPaths);
                 results.addAll(ScanAdapter.fetchResults(config, scanMetaData));
             } finally {
                 if (scanMetaData != null) {
@@ -182,9 +189,14 @@ public class Main {
             this.sourceDirs = Arrays.asList(config.getRootDir().toString());
         }
         sourceDirs.forEach(sourceDir -> {
-            if (!Paths.get(sourceDir).toFile().isDirectory()) {
+            val path = Paths.get(sourceDir);
+            if (!path.toFile().isDirectory()) {
                 throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
                                            sourceDir + " is not a valid directory.");
+            }
+            if (!path.toAbsolutePath().normalize().startsWith(config.getRootDir())) {
+                throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
+                                           sourceDir + " is not a sub-directory of " + config.getRootDir());
             }
         });
         if (this.buildDirs != null) {

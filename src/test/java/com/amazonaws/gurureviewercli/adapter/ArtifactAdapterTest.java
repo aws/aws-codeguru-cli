@@ -30,17 +30,55 @@ class ArtifactAdapterTest {
     private S3Client s3client;
 
     @Test
-    public void test_zipAndUpload_happyCaseSourceOnly() throws Exception{
+    public void test_zipAndUpload_happyCaseSourceOnly() throws Exception {
         val repoDir = Paths.get("./");
         // skip the test if the test container stripped to the top level .git folder
         Assumptions.assumeTrue(repoDir.resolve(".git").toFile().isDirectory());
         val tempDir = Files.createTempDirectory("test_zipAndUpload_happyCase");
         val bucketName = "some-bucket";
 
-        final List<String> sourceDirs = Arrays.asList("src");
-        final List<String> buildDirs = Collections.emptyList();
+        val sourceDirs = Arrays.asList(Paths.get("src"));
+        final List<Path> buildDirs = Collections.emptyList();
         val config = Configuration.builder()
                                   .s3Client(s3client)
+                                  .build();
+        Answer<Object> answer = invocationOnMock -> {
+            System.err.println(invocationOnMock);
+            Path filePath = invocationOnMock.getArgument(1);
+            Assertions.assertTrue(filePath.toFile().isFile());
+            try (val zipFile = new ZipFile(filePath.toFile())) {
+                val entries = zipFile.entries();
+                while (entries.hasMoreElements()) {
+                    val s = entries.nextElement().getName();
+                    val original = repoDir.resolve(s).toFile();
+                    Assertions.assertTrue(original.isFile(), "Not a valid file: " + original);
+                    Assertions.assertFalse(s.startsWith(".."));
+                }
+            }
+            return null;
+        };
+        doAnswer(answer).when(s3client).putObject(any(PutObjectRequest.class), any(Path.class));
+
+        val metaData = ArtifactAdapter.zipAndUpload(config, tempDir, repoDir, sourceDirs, buildDirs, bucketName);
+        Assertions.assertNull(metaData.getBuildKey());
+        Assertions.assertNotNull(metaData.getSourceKey());
+    }
+
+
+    @Test
+    public void test_zipAndUpload_happyCaseGitFilesOnly() throws Exception {
+        val repoDir = Paths.get("./");
+        // skip the test if the test container stripped to the top level .git folder
+        Assumptions.assumeTrue(repoDir.resolve(".git").toFile().isDirectory());
+        val tempDir = Files.createTempDirectory("test_zipAndUpload_happyCaseGitFilesOnly");
+        val bucketName = "some-bucket";
+
+        val sourceDirs = Arrays.asList(Paths.get("src"));
+        final List<Path> buildDirs = Collections.emptyList();
+        val config = Configuration.builder()
+                                  .s3Client(s3client)
+                                  .versionedFiles(Arrays.asList(Paths.get("src/main/java/com/amazonaws/"
+                                                                          + "gurureviewercli/Main.java")))
                                   .build();
         Answer<Object> answer = invocationOnMock -> {
             System.err.println(invocationOnMock);

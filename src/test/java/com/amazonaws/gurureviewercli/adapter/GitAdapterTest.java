@@ -48,6 +48,7 @@ class GitAdapterTest {
         Assertions.assertNotNull(gitMetaData);
         Assertions.assertNull(gitMetaData.getBeforeCommit());
         Assertions.assertNull(gitMetaData.getAfterCommit());
+        Assertions.assertEquals(1, gitMetaData.getVersionedFiles().size());
         Assertions.assertEquals("master", gitMetaData.getCurrentBranch());
         Assertions.assertEquals("git@amazon.com:username/new_repo", gitMetaData.getRemoteUrl());
     }
@@ -77,6 +78,7 @@ class GitAdapterTest {
         Assertions.assertNotNull(gitMetaData);
         Assertions.assertNotNull(gitMetaData.getBeforeCommit());
         Assertions.assertNotNull(gitMetaData.getAfterCommit());
+        Assertions.assertEquals(1, gitMetaData.getVersionedFiles().size());
         Assertions.assertEquals("master", gitMetaData.getCurrentBranch());
         Assertions.assertEquals("git@amazon.com:username/new_repo", gitMetaData.getRemoteUrl());
     }

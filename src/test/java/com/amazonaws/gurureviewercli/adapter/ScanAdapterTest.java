@@ -1,5 +1,6 @@
 package com.amazonaws.gurureviewercli.adapter;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -70,8 +71,8 @@ class ScanAdapterTest {
         val gitMetaData = GitMetaData.builder()
                                      .repoRoot(Paths.get("./"))
                                      .build();
-        List<String> sourceDirs = Arrays.asList("src");
-        List<String> buildDirs = Arrays.asList();
+        val sourceDirs = Arrays.asList(Paths.get("src"));
+        List<Path> buildDirs = Arrays.asList();
         ScanAdapter.startScan(config, gitMetaData, sourceDirs, buildDirs);
     }
 }
