@@ -31,8 +31,8 @@ import com.amazonaws.gurureviewercli.util.Log;
 public final class GitAdapter {
 
     @Nonnull
-    public static GitMetaData getGitMetaData(final Configuration config, final Path pathToRepo) {
-        val gitDir = pathToRepo.toAbsolutePath().normalize().resolve(".git");
+    public static GitMetaData getGitMetaData(final Configuration config, final Path pathToRepo) throws IOException {
+        val gitDir = pathToRepo.toRealPath().resolve(".git");
         if (!gitDir.toFile().isDirectory()) {
             // if the directory is not under version control, return a dummy object.
             return GitMetaData.builder()
@@ -41,7 +41,7 @@ public final class GitAdapter {
                               .currentBranch("unknown")
                               .build();
         }
-        return tryGetMetaData(config, pathToRepo.toAbsolutePath().normalize().resolve(".git"));
+        return tryGetMetaData(config, pathToRepo.toRealPath().resolve(".git"));
     }
 
     @Nonnull
@@ -111,8 +111,7 @@ public final class GitAdapter {
             if (treeWalk.isSubtree()) {
                 treeWalk.enterSubtree();
             } else {
-                val normalizedPath = rootDir.resolve(treeWalk.getPathString())
-                                               .toAbsolutePath().normalize();
+                val normalizedPath = rootDir.resolve(treeWalk.getPathString()).toRealPath();
                 allFiles.add(normalizedPath);
             }
         }

@@ -76,7 +76,7 @@ public final class ArtifactAdapter {
                 val sourceDirsAndGit = new ArrayList<Path>(sourceDirs);
                 if (config.getBeforeCommit() != null && config.getAfterCommit() != null) {
                     // only add the git folder if a commit range is provided.
-                    sourceDirsAndGit.add(repositoryDir.resolve(".git").toAbsolutePath());
+                    sourceDirsAndGit.add(repositoryDir.resolve(".git"));
                 }
                 sourceKey = zipAndUploadDir("analysis-src-" + UUID.randomUUID(), sourceDirsAndGit, repositoryDir,
                                             bucketName, tempDir, config.getAccountId(), config.getS3Client());

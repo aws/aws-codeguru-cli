@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -31,7 +32,7 @@ public final class ZipUtils {
         Path p = Files.createFile(Paths.get(zipFilePath).normalize().toAbsolutePath());
         try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(p))) {
             for (val sourceDirPath : sourceDirPaths) {
-                Path pp = sourceDirPath.normalize().toAbsolutePath();
+                Path pp = sourceDirPath.toRealPath();
                 try (val walk = Files.walk(pp)) {
                     walk.filter(path -> !Files.isDirectory(path))
                         .forEach(path -> {
@@ -78,7 +79,7 @@ public final class ZipUtils {
     public static void packFiles(final Collection<Path> files,
                                  final Path relativeRoot,
                                  final Path zipFilePath) throws IOException {
-        val normalizedRoot = relativeRoot.toAbsolutePath().normalize();
+        val normalizedRoot = relativeRoot.toRealPath();
         val normalizedFiles = files.stream()
                                    .map(Path::toAbsolutePath)
                                    .map(Path::normalize)
@@ -115,7 +116,7 @@ public final class ZipUtils {
     public static List<Path> getFilesInDirectories(Collection<Path> directories) throws IOException {
         val files = new ArrayList<Path>();
         for (val directory : directories) {
-            Path pp = directory.normalize().toAbsolutePath();
+            Path pp = directory.toRealPath();
             files.addAll(getFilesInDirectory(pp));
         }
         return files;
@@ -129,8 +130,10 @@ public final class ZipUtils {
      * @throws IOException If reading the file system fails.
      */
     public static List<Path> getFilesInDirectory(final Path directory) throws IOException {
-        Path pp = directory.normalize().toAbsolutePath();
-        try (val walk = Files.walk(pp)) {
+        if (directory == null || !directory.toFile().isDirectory()) {
+            return Collections.emptyList();
+        }
+        try (val walk = Files.walk(directory.toRealPath())) {
             return walk.filter(path -> !Files.isDirectory(path)).collect(Collectors.toList());
         }
     }

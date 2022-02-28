@@ -17,7 +17,7 @@ class ResultsAdapterTest {
         val recommendations =
             JsonUtil.loadRecommendations(Paths.get("test-data/recommendations/recommendations.json"));
         val scanMetaData = ScanMetaData.builder()
-                                       .repositoryRoot(Paths.get("./").toAbsolutePath().normalize())
+                                       .repositoryRoot(Paths.get("./").toRealPath())
                                        .associationArn("123")
                                        .codeReviewArn("456")
                                        .sourceDirectories(Collections.emptyList())
