@@ -2,6 +2,7 @@ package com.amazonaws.gurureviewercli.model;
 
 import javax.annotation.Nullable;
 import java.nio.file.Path;
+import java.util.Collection;
 
 import lombok.Builder;
 import lombok.Data;
@@ -42,4 +43,7 @@ public class Configuration {
 
     private @Nullable
     String afterCommit;
+
+    private @Nullable
+    Collection<Path> versionedFiles;
 }
