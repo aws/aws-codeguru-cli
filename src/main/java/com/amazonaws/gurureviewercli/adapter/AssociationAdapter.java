@@ -67,6 +67,15 @@ public final class AssociationAdapter {
                                         association.kmsKeyDetails().kmsKeyId());
                 throw new GuruCliException(ErrorCodes.ASSOCIATION_FAILED, msg);
             }
+            if (config.getBucketName() != null &&
+                !config.getBucketName().equals(association.s3RepositoryDetails().bucketName())) {
+                val msg = String.format("Provided Bucket name %s for repository %s does "
+                                        + "not match existing key: %s",
+                                        config.getBucketName(),
+                                        association.name(),
+                                        association.s3RepositoryDetails().bucketName());
+                throw new GuruCliException(ErrorCodes.ASSOCIATION_FAILED, msg);
+            }
             return association;
         } else if (associationResults.repositoryAssociationSummaries().isEmpty()) {
             return createBucketAndAssociation(config);

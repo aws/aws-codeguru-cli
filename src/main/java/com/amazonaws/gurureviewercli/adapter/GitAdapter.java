@@ -3,15 +3,21 @@ package com.amazonaws.gurureviewercli.adapter;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 
 import lombok.val;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.eclipse.jgit.treewalk.TreeWalk;
 
 import com.amazonaws.gurureviewercli.exceptions.GuruCliException;
 import com.amazonaws.gurureviewercli.model.Configuration;
@@ -25,8 +31,8 @@ import com.amazonaws.gurureviewercli.util.Log;
 public final class GitAdapter {
 
     @Nonnull
-    public static GitMetaData getGitMetaData(final Configuration config, final Path pathToRepo) {
-        val gitDir = pathToRepo.toAbsolutePath().normalize().resolve(".git");
+    public static GitMetaData getGitMetaData(final Configuration config, final Path pathToRepo) throws IOException {
+        val gitDir = pathToRepo.toRealPath().resolve(".git");
         if (!gitDir.toFile().isDirectory()) {
             // if the directory is not under version control, return a dummy object.
             return GitMetaData.builder()
@@ -35,7 +41,7 @@ public final class GitAdapter {
                               .currentBranch("unknown")
                               .build();
         }
-        return tryGetMetaData(config, pathToRepo.toAbsolutePath().normalize().resolve(".git"));
+        return tryGetMetaData(config, pathToRepo.toRealPath().resolve(".git"));
     }
 
     @Nonnull
@@ -59,6 +65,8 @@ public final class GitAdapter {
                                       .remoteUrl(urlString)
                                       .build();
 
+            metadata.setVersionedFiles(getChangedFiles(repository));
+            config.setVersionedFiles(metadata.getVersionedFiles());
             if (config.getBeforeCommit() == null || config.getAfterCommit() == null) {
                 // ask if commits should be inferred or if the entire repo should be scanned.
                 Log.warn("CodeGuru will perform a full repository analysis if you do not provide a commit range.");
@@ -80,12 +88,34 @@ public final class GitAdapter {
             validateCommits(config, repository);
             metadata.setBeforeCommit(config.getBeforeCommit());
             metadata.setAfterCommit(config.getAfterCommit());
-
             return metadata;
 
         } catch (IOException | GitAPIException e) {
             throw new GuruCliException(ErrorCodes.GIT_INVALID_DIR, "Cannot read " + gitDir, e);
         }
+    }
+
+    private static Collection<Path> getChangedFiles(final Repository repository) throws IOException {
+        val headCommitId = repository.resolve(Constants.HEAD);
+        if (headCommitId == null) {
+            return Collections.emptySet();
+        }
+        val rootDir = repository.getWorkTree().toPath();
+        RevWalk revWalk = new RevWalk(repository);
+        RevCommit commit = revWalk.parseCommit(headCommitId);
+        val treeWalk = new TreeWalk(repository);
+        treeWalk.addTree(commit.getTree());
+        treeWalk.setRecursive(false);
+        val allFiles = new HashSet<Path>();
+        while (treeWalk.next()) {
+            if (treeWalk.isSubtree()) {
+                treeWalk.enterSubtree();
+            } else {
+                val normalizedPath = rootDir.resolve(treeWalk.getPathString()).toRealPath();
+                allFiles.add(normalizedPath);
+            }
+        }
+        return allFiles;
     }
 
     private static boolean validateCommits(final Configuration config, final Repository repo)
@@ -100,7 +130,8 @@ public final class GitAdapter {
 
         val diffEntries = new Git(repo).diff().setOldTree(beforeTreeIter).setNewTree(afterTreeIter).call();
         if (diffEntries.isEmpty()) {
-            throw new GuruCliException(ErrorCodes.GIT_EMPTY_DIFF);
+            throw new GuruCliException(ErrorCodes.GIT_EMPTY_DIFF, String.format("No difference between {} and {}",
+                                                                                beforeTreeIter, afterTreeIter));
         }
 
         return true;

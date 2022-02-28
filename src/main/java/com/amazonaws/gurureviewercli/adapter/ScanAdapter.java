@@ -2,6 +2,7 @@ package com.amazonaws.gurureviewercli.adapter;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -48,8 +49,8 @@ public final class ScanAdapter {
 
     public static ScanMetaData startScan(final Configuration config,
                                          final GitMetaData gitMetaData,
-                                         final List<String> sourceDirs,
-                                         final List<String> buildDirs) throws IOException {
+                                         final List<Path> sourceDirs,
+                                         final List<Path> buildDirs) throws IOException {
         val association = AssociationAdapter.getAssociatedGuruRepo(config);
         val bucketName = association.s3RepositoryDetails().bucketName();
         Log.info("Starting analysis of %s with association %s and S3 bucket %s",

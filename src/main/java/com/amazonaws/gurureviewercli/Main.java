@@ -1,12 +1,14 @@
 package com.amazonaws.gurureviewercli;
 
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -111,12 +113,18 @@ public class Main {
             config.setRepoName(repoName);
 
             // check if repo is valid git.
-            val gitMetaData = main.readGitMetaData(config, Paths.get(main.repoDir).normalize());
+            val gitMetaData = main.readGitMetaData(config, Paths.get(main.repoDir).toRealPath());
 
             ScanMetaData scanMetaData = null;
             List<RecommendationSummary> results = new ArrayList<>();
             try {
-                scanMetaData = ScanAdapter.startScan(config, gitMetaData, main.sourceDirs, main.buildDirs);
+                val sourcePaths = main.sourceDirs.stream()
+                                                 .map(Paths::get).map(Path::toAbsolutePath).map(Path::normalize)
+                                                 .collect(Collectors.toList());
+                val buildPaths = main.sourceDirs.stream()
+                                                .map(Paths::get).map(Path::toAbsolutePath).map(Path::normalize)
+                                                .collect(Collectors.toList());
+                scanMetaData = ScanAdapter.startScan(config, gitMetaData, sourcePaths, buildPaths);
                 results.addAll(ScanAdapter.fetchResults(config, scanMetaData));
             } finally {
                 if (scanMetaData != null) {
@@ -154,7 +162,7 @@ public class Main {
         System.exit(0);
     }
 
-    protected GitMetaData readGitMetaData(final Configuration config, final Path repoRoot) {
+    protected GitMetaData readGitMetaData(final Configuration config, final Path repoRoot) throws IOException {
         if (commitRange != null) {
             val commits = commitRange.split(":");
             if (commits.length != 2) {
@@ -168,7 +176,7 @@ public class Main {
         return GitAdapter.getGitMetaData(config, repoRoot);
     }
 
-    private void validateInitialConfig(final Configuration config) {
+    private void validateInitialConfig(final Configuration config) throws IOException {
         if (config.getBucketName() != null && !config.getBucketName().startsWith("codeguru-reviewer-")) {
             Log.warn("CodeGuru Reviewer has default settings only for buckets that are prefixed with "
                      + "codeguru-reviewer. If you choose a different name, read the instructions in the README.");
@@ -177,14 +185,19 @@ public class Main {
             throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
                                        repoDir + " is not a valid directory.");
         }
-        config.setRootDir(Paths.get(repoDir).toAbsolutePath().normalize());
+        config.setRootDir(Paths.get(repoDir).toRealPath());
         if (this.sourceDirs == null || this.sourceDirs.isEmpty()) {
             this.sourceDirs = Arrays.asList(config.getRootDir().toString());
         }
         sourceDirs.forEach(sourceDir -> {
-            if (!Paths.get(sourceDir).toFile().isDirectory()) {
+            val path = Paths.get(sourceDir);
+            if (!path.toFile().isDirectory()) {
                 throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
                                            sourceDir + " is not a valid directory.");
+            }
+            if (!path.toAbsolutePath().normalize().startsWith(config.getRootDir())) {
+                throw new GuruCliException(ErrorCodes.DIR_NOT_FOUND,
+                                           sourceDir + " is not a sub-directory of " + config.getRootDir());
             }
         });
         if (this.buildDirs != null) {
