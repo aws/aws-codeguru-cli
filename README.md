@@ -4,10 +4,18 @@ receive results. This CLI wraps the [AWS CLI](https://aws.amazon.com/cli/) comma
 [AWS CodeGuru Reviewer](https://aws.amazon.com/codeguru/). Using CodeGuru Reviewer may generate metering fees
 in your AWS account. See the [CodeGuru Reviewer pricing](https://aws.amazon.com/codeguru/pricing/) for details.
 
-### Before you start
+### Prerequisites
 
-Before we start, let's make sure that you can access an AWS account from your computer. 
-Follow the credential setup process for the [AWS CLI](https://github.com/aws/aws-cli#configuration).
+To run the CLI, we need to have a version of git, Java (e.g., [Amazon Corretto](https://aws.amazon.com/corretto/?filtered-posts.sort-by=item.additionalFields.createdDate&filtered-posts.sort-order=desc)) and the [AWS Command Line interface](https://aws.amazon.com/cli/) installed. Verify that both application are installed on our machine by running:
+
+```
+java -version
+mvn --version
+aws --version
+git --version
+```
+
+We will also need working credentials on our machine to interact with our AWS account. Learn more about setting up credentials for AWS here: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html. 
 The credentials must have at least the following permissions:
 
 ```json
