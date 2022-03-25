@@ -31,10 +31,27 @@ jobs:
         role-to-assume: arn:aws:iam::048169001733:role/GuruGitHubCICDRole
         aws-region: us-west-2
 
+
+    - name: Checkout Test Data
+      if: steps.iam-role.outcome == 'success'
+      uses: actions/checkout@master
+      with:
+        repository: aws-samples/amazon-codeguru-samples
+        path: ./amazon-codeguru-samples
+
+    - name: Build Test Project
+      if: steps.iam-role.outcome == 'success'
+      run: |
+        cd amazon-codeguru-samples
+        ./gradlew
+        cd ..
+
     - name: Self Test
       if: steps.iam-role.outcome == 'success'
       run: |
-        ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r . -s src/main/java -b build/libs -c HEAD^:HEAD --no-prompt
+        ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r amazon-codeguru-samples -s amazon-codeguru-samples/src/main/java -b amazon-codeguru-samples/build/libs --no-prompt
+        cat code-guru/recommendations.json
+        [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq 12 ]] || { echo >&2 "Expected 12 recommendations."; exit 1; }
 
     - name: Get Release Version
       run: |
@@ -42,6 +59,7 @@ jobs:
       id: version
 
     - name: Release
+      if: steps.iam-role.outcome == 'success'
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ steps.version.outputs.TAG_NAME }}
