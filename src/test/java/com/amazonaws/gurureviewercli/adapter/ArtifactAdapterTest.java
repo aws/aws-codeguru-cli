@@ -161,7 +161,7 @@ class ArtifactAdapterTest {
 
         // only include files from the util dir.
         val repoDir = Paths.get("./test-data/fake-repo");
-        val buildArtifacts = repoDir.resolve("build/lib");
+        val buildArtifacts = repoDir.resolve("build-dir/lib");
         final List<Path> buildDirs = Arrays.asList(buildArtifacts);
 
         val config = Configuration.builder()
@@ -180,12 +180,10 @@ class ArtifactAdapterTest {
                 int count = 0;
                 while (entries.hasMoreElements()) {
                     val s = entries.nextElement().getName();
-                    val original = repoDir.resolve(s).toFile();
-                    Assertions.assertTrue(original.isFile(), "Not a valid file: " + original);
-                    if (!s.startsWith("git/")) {
-                        count++; // count the files that are not in the git folder.
-                    }
+                    Assertions.assertTrue(s.endsWith("included.txt"));
+                    count++; // count the files that are not in the git folder.
                 }
+                Assertions.assertEquals(1, count);
             }
             return null;
         };
@@ -197,7 +195,7 @@ class ArtifactAdapterTest {
                                          Arrays.asList(repoDir),
                                          Arrays.asList(buildArtifacts),
                                          bucketName);
-        Assertions.assertNull(metaData.getBuildKey());
+        Assertions.assertNotNull(metaData.getBuildKey());
         Assertions.assertNotNull(metaData.getSourceKey());
     }
 }
