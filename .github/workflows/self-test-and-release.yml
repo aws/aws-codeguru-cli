@@ -37,11 +37,12 @@ jobs:
       uses: actions/checkout@master
       with:
         repository: aws-samples/amazon-codeguru-samples
-        path: ./ElegantNetworkingRoot
+        path: ./amazon-codeguru-samples
 
     - name: Download Test Data
       if: steps.iam-role.outcome == 'success'
       run: |
+        ls -R
         cd amazon-codeguru-samples
         ./gradlew
         cd ..
