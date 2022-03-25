@@ -152,4 +152,52 @@ class ArtifactAdapterTest {
         Assertions.assertNull(metaData.getBuildKey());
         Assertions.assertNotNull(metaData.getSourceKey());
     }
+
+    @Test
+    public void test_zipAndUpload_happyCaseBuildDir() throws Exception {
+
+        val tempDir = Files.createTempDirectory("test_zipAndUpload_happyCaseGitFilesOnly");
+        val bucketName = "some-bucket";
+
+        // only include files from the util dir.
+        val repoDir = Paths.get("./test-data/fake-repo");
+        val buildArtifacts = repoDir.resolve("build/lib");
+        final List<Path> buildDirs = Arrays.asList(buildArtifacts);
+
+        val config = Configuration.builder()
+                                  .s3Client(s3client)
+                                  .interactiveMode(false)
+                                  .build();
+
+        Answer<Object> answer = invocationOnMock -> {
+            Path filePath = invocationOnMock.getArgument(1);
+            if (!filePath.toString().contains("analysis-bin")) {
+                return null; // only look at the artifacts.
+            }
+            Assertions.assertTrue(filePath.toFile().isFile());
+            try (val zipFile = new ZipFile(filePath.toFile())) {
+                val entries = zipFile.entries();
+                int count = 0;
+                while (entries.hasMoreElements()) {
+                    val s = entries.nextElement().getName();
+                    val original = repoDir.resolve(s).toFile();
+                    Assertions.assertTrue(original.isFile(), "Not a valid file: " + original);
+                    if (!s.startsWith("git/")) {
+                        count++; // count the files that are not in the git folder.
+                    }
+                }
+            }
+            return null;
+        };
+        doAnswer(answer).when(s3client).putObject(any(PutObjectRequest.class), any(Path.class));
+
+        val metaData =
+            ArtifactAdapter.zipAndUpload(config, tempDir,
+                                         repoDir,
+                                         Arrays.asList(repoDir),
+                                         Arrays.asList(buildArtifacts),
+                                         bucketName);
+        Assertions.assertNull(metaData.getBuildKey());
+        Assertions.assertNotNull(metaData.getSourceKey());
+    }
 }

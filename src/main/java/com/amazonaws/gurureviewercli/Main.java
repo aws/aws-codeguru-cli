@@ -121,7 +121,7 @@ public class Main {
                 val sourcePaths = main.sourceDirs.stream()
                                                  .map(Paths::get).map(Path::toAbsolutePath).map(Path::normalize)
                                                  .collect(Collectors.toList());
-                val buildPaths = main.sourceDirs.stream()
+                val buildPaths = main.buildDirs.stream()
                                                 .map(Paths::get).map(Path::toAbsolutePath).map(Path::normalize)
                                                 .collect(Collectors.toList());
                 scanMetaData = ScanAdapter.startScan(config, gitMetaData, sourcePaths, buildPaths);
