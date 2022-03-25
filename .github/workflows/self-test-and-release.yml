@@ -39,10 +39,9 @@ jobs:
         repository: aws-samples/amazon-codeguru-samples
         path: ./amazon-codeguru-samples
 
-    - name: Download Test Data
+    - name: Build Test Project
       if: steps.iam-role.outcome == 'success'
       run: |
-        ls -R
         cd amazon-codeguru-samples
         ./gradlew
         cd ..
@@ -51,6 +50,8 @@ jobs:
       if: steps.iam-role.outcome == 'success'
       run: |
         ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r amazon-codeguru-samples -s amazon-codeguru-samples/src/main/java -b amazon-codeguru-samples/build/libs --no-prompt
+        cat code-guru/recommendations.json
+        [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq 12 ]] || { echo >&2 "Expected 12 recommendations."; exit 1; }
 
     - name: Get Release Version
       run: |
