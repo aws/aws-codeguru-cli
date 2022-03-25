@@ -31,10 +31,17 @@ jobs:
         role-to-assume: arn:aws:iam::048169001733:role/GuruGitHubCICDRole
         aws-region: us-west-2
 
+
+    - name: Checkout Test Data
+      if: steps.iam-role.outcome == 'success'
+      uses: actions/checkout@master
+      with:
+        repository: aws-samples/amazon-codeguru-samples
+        path: ./ElegantNetworkingRoot
+
     - name: Download Test Data
       if: steps.iam-role.outcome == 'success'
       run: |
-        git checkout https://github.com/aws-samples/amazon-codeguru-samples.git
         cd amazon-codeguru-samples
         ./gradlew
         cd ..
