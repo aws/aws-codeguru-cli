@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.contrastsecurity.sarif.SarifSchema210;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
@@ -37,6 +38,11 @@ public final class JsonUtil {
     public static void storeRecommendations(@NonNull final List<RecommendationSummary> recommendations,
                                             @NonNull final Path targetFile) throws IOException {
         OBJECT_MAPPER.writeValue(targetFile.toFile(), recommendations);
+    }
+
+    public static void writeSarif(@NonNull final SarifSchema210 sarif, @NonNull final Path targetFile)
+        throws IOException {
+        OBJECT_MAPPER.writeValue(targetFile.toFile(), sarif);
     }
 
     private JsonUtil() {
