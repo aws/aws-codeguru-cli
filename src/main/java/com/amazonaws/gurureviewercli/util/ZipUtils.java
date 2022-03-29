@@ -95,7 +95,8 @@ public final class ZipUtils {
         try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(zipFile))) {
             for (val file : normalizedFiles) {
                 val relPath = normalizedRoot.relativize(file).normalize().toString();
-                ZipEntry zipEntry = new ZipEntry(relPath);
+                // replace windows file separators
+                ZipEntry zipEntry = new ZipEntry(relPath.replace(System.getProperty("file.separator"), "/"));
                 try {
                     zs.putNextEntry(zipEntry);
                     zs.write(Files.readAllBytes(file));
