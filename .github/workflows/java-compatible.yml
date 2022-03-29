@@ -12,11 +12,12 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         java: [ '8', '11', '16', '17' ]
-    name: Java ${{ matrix.Java }} build
+        os: [ubuntu-latest, windows-latest]
+    name: Java ${{ matrix.Java }} build on ${{ matrix.os }}
 
     steps:    
     - uses: actions/checkout@v2
