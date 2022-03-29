@@ -22,7 +22,7 @@ class ResultsAdapterTest {
                                        .codeReviewArn("456")
                                        .sourceDirectories(Collections.emptyList())
                                        .build();
-        val outDir = Files.createTempDirectory(Paths.get("./"), "test-output");
+        val outDir = Files.createTempDirectory("test-output");
         ResultsAdapter.saveResults(outDir, recommendations, scanMetaData);
     }
 }

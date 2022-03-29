@@ -1,48 +1,27 @@
-
 buildscript {
-  repositories {
-    maven {
-      url "https://plugins.gradle.org/m2/"
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
     }
-  }
-  dependencies {
-    classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:5.0.3"
-  }
+    dependencies {
+        classpath "com.github.spotbugs.snom:spotbugs-gradle-plugin:5.0.6"
+    }
 }
 
-/*
- Applies core Gradle plugins, which are ones built into Gradle itself.
-*/
 plugins {
-    // Java for compile and unit test of Java source files. Read more at:
-    // https://docs.gradle.org/current/userguide/java_plugin.html
     id 'java'
-
-    // Checkstyle for style checks and reports on Java source files. Read more at:
-    // https://docs.gradle.org/current/userguide/checkstyle_plugin.html
-    id 'checkstyle'
-
     id 'application'
-}
 
-// SpotBugs for quality checks and reports of source files. Read more at:
-// https://spotbugs.readthedocs.io/en/stable/gradle.html
-apply plugin: 'com.github.spotbugs'
-
-checkstyle {
-    sourceSets = [sourceSets.main]
-    ignoreFailures = false
-}
-
-spotbugs {
-    ignoreFailures.set(false)
+    id "com.github.spotbugs" version "5.0.6"
+    id 'checkstyle'
 }
 
 repositories {
     mavenCentral()
 }
 
-defaultTasks('installDist')
+defaultTasks 'clean', 'check', 'installDist'
 
 version = '0.0.4'
 jar.archiveName = "${jar.baseName}.${jar.extension}"
@@ -81,16 +60,45 @@ dependencies {
 
     compileOnly 'org.projectlombok:lombok:1.18.22'
     annotationProcessor 'org.projectlombok:lombok:1.18.22'
-    
+
     testCompileOnly 'org.projectlombok:lombok:1.18.22'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
     testImplementation 'org.mockito:mockito-junit-jupiter:4.2.0'
+
 }
 
 test {
     useJUnitPlatform()
 }
+
+apply plugin: 'checkstyle'
+checkstyle {
+    toolVersion = '8.37'
+    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+    ignoreFailures = true
+}
+checkstyleMain {
+    source = 'src/main/java'
+}
+checkstyleTest {
+    source = 'src/test/java'
+}
+
+/**
+ * SpotBugs Plugin
+ */
+spotbugs {
+    showStackTraces = false
+    reportsDir = file("$buildDir/reports/spotbugs")
+    ignoreFailures = false
+    includeFilter = file("config/spotbugs/spotbugs-exclude.xml")
+    showProgress = true
+    effort = 'default'
+    reportLevel = 'default'
+}
+
+
 
