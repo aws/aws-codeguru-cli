@@ -36,10 +36,9 @@ public final class ZipUtils {
                 try (val walk = Files.walk(pp)) {
                     walk.filter(path -> !Files.isDirectory(path))
                         .forEach(path -> {
-                            String relativePath = pp.relativize(path.normalize().toAbsolutePath()).toString();
+                            val relativePath = pp.relativize(path.normalize().toAbsolutePath());
                             // in case we run on Windows
-                            relativePath = relativePath.replace(System.getProperty("file.separator"), "/");
-                            ZipEntry zipEntry = new ZipEntry(relativePath);
+                            ZipEntry zipEntry = new ZipEntry(getUnixStylePathName(relativePath));
                             try {
                                 zs.putNextEntry(zipEntry);
                                 zs.write(Files.readAllBytes(path));
@@ -94,9 +93,9 @@ public final class ZipUtils {
         Path zipFile = Files.createFile(zipFilePath);
         try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(zipFile))) {
             for (val file : normalizedFiles) {
-                val relPath = normalizedRoot.relativize(file).normalize().toString();
-                // replace windows file separators
-                ZipEntry zipEntry = new ZipEntry(relPath.replace(System.getProperty("file.separator"), "/"));
+                val relPath = normalizedRoot.relativize(file);
+                // replace Windows file separators
+                ZipEntry zipEntry = new ZipEntry(getUnixStylePathName(relPath));
                 try {
                     zs.putNextEntry(zipEntry);
                     zs.write(Files.readAllBytes(file));
@@ -138,6 +137,10 @@ public final class ZipUtils {
         try (val walk = Files.walk(directory.toRealPath())) {
             return walk.filter(path -> !Files.isDirectory(path)).collect(Collectors.toList());
         }
+    }
+
+    private static String getUnixStylePathName(final Path path) {
+        return path.normalize().toString().replace('\\', '/' );
     }
 
     /**
