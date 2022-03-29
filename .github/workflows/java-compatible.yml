@@ -1,10 +1,7 @@
 
 name: Build with different JDKs
 
-on:
-  push:
-    branches:
-      - main
+on: push
 
 permissions:
     id-token: write
