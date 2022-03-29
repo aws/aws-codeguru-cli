@@ -38,7 +38,7 @@ public final class ZipUtils {
                         .forEach(path -> {
                             String relativePath = pp.relativize(path.normalize().toAbsolutePath()).toString();
                             // in case we run on Windows
-//                            relativePath = relativePath.replace(System.getProperty("file.separator"), "/");
+                            relativePath = relativePath.replace(System.getProperty("file.separator"), "/");
                             ZipEntry zipEntry = new ZipEntry(relativePath);
                             try {
                                 zs.putNextEntry(zipEntry);
