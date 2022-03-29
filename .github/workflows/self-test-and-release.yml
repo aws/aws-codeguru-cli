@@ -54,6 +54,9 @@ jobs:
         [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq 12 ]] || { echo >&2 "Expected 12 recommendations."; exit 1; }
 
   PublishVersion:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 1.8
       uses: actions/setup-java@v1
