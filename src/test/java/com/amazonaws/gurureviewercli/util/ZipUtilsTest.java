@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -21,10 +22,16 @@ public class ZipUtilsTest {
         ZipUtils.pack(Arrays.asList(testDir), testDir, zipName);
         ZipFile zipFile = new ZipFile(zipName);
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
-        while(entries.hasMoreElements()){
+        val expectedFileNames =
+            new HashSet<String>(Arrays.asList("build-dir/should-not-be-included.txt",
+                                              "build-dir/lib/included.txt",
+                                              "should-not-be-included.txt"));
+        while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
             Assertions.assertFalse(entry.toString().contains("\\"));
-            System.err.println(entry.getName());
+            Assertions.assertTrue(expectedFileNames.contains(entry.toString()));
+            expectedFileNames.remove(entry.toString());
         }
+        Assertions.assertTrue(expectedFileNames.isEmpty());
     }
 }
