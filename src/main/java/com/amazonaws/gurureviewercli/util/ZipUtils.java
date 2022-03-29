@@ -36,9 +36,10 @@ public final class ZipUtils {
                 try (val walk = Files.walk(pp)) {
                     walk.filter(path -> !Files.isDirectory(path))
                         .forEach(path -> {
-                            val normalizedPath = path.normalize().toAbsolutePath();
-                            val relpath = pp.relativize(normalizedPath).toString();
-                            ZipEntry zipEntry = new ZipEntry(relpath);
+                            String relativePath = pp.relativize(path.normalize().toAbsolutePath()).toString();
+                            // in case we run on Windows
+//                            relativePath = relativePath.replace(System.getProperty("file.separator"), "/");
+                            ZipEntry zipEntry = new ZipEntry(relativePath);
                             try {
                                 zs.putNextEntry(zipEntry);
                                 zs.write(Files.readAllBytes(path));

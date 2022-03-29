@@ -24,7 +24,7 @@ jobs:
         distribution: 'temurin'
         java-version: ${{ matrix.java }}
     - name: Build project
-      run: ./gradlew clean installDist
+      run: ./gradlew clean test installDist
     - name: Run cli
       run: ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli
 
