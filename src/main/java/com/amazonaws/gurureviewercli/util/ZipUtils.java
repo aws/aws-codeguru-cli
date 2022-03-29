@@ -36,9 +36,9 @@ public final class ZipUtils {
                 try (val walk = Files.walk(pp)) {
                     walk.filter(path -> !Files.isDirectory(path))
                         .forEach(path -> {
-                            val normalizedPath = path.normalize().toAbsolutePath();
-                            val relpath = pp.relativize(normalizedPath).toString();
-                            ZipEntry zipEntry = new ZipEntry(relpath);
+                            val relativePath = pp.relativize(path.normalize().toAbsolutePath());
+                            // in case we run on Windows
+                            ZipEntry zipEntry = new ZipEntry(getUnixStylePathName(relativePath));
                             try {
                                 zs.putNextEntry(zipEntry);
                                 zs.write(Files.readAllBytes(path));
@@ -93,8 +93,9 @@ public final class ZipUtils {
         Path zipFile = Files.createFile(zipFilePath);
         try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(zipFile))) {
             for (val file : normalizedFiles) {
-                val relPath = normalizedRoot.relativize(file).normalize().toString();
-                ZipEntry zipEntry = new ZipEntry(relPath);
+                val relPath = normalizedRoot.relativize(file);
+                // replace Windows file separators
+                ZipEntry zipEntry = new ZipEntry(getUnixStylePathName(relPath));
                 try {
                     zs.putNextEntry(zipEntry);
                     zs.write(Files.readAllBytes(file));
@@ -136,6 +137,10 @@ public final class ZipUtils {
         try (val walk = Files.walk(directory.toRealPath())) {
             return walk.filter(path -> !Files.isDirectory(path)).collect(Collectors.toList());
         }
+    }
+
+    private static String getUnixStylePathName(final Path path) {
+        return path.normalize().toString().replace('\\', '/' );
     }
 
     /**

@@ -141,7 +141,7 @@ class ArtifactAdapterTest {
                         count++; // count the files that are not in the git folder.
                     }
                 }
-                Assertions.assertEquals(2, count, "Unexpected number of files in zip.");
+                Assertions.assertEquals(2, count, "Unexpected number of files in zip: " + count);
             }
             return null;
         };

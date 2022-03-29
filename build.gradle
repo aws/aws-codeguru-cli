@@ -44,7 +44,7 @@ repositories {
 
 defaultTasks('installDist')
 
-version = '0.0.3'
+version = '0.0.4'
 jar.archiveName = "${jar.baseName}.${jar.extension}"
 distZip.archiveName = "${jar.baseName}.zip"
 
