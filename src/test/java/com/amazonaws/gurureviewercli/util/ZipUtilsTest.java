@@ -28,7 +28,7 @@ public class ZipUtilsTest {
                                               "should-not-be-included.txt"));
         while (entries.hasMoreElements()) {
             ZipEntry entry = entries.nextElement();
-            Assertions.assertFalse(entry.toString().contains("\\"));
+            Assertions.assertFalse(entry.toString().contains("\\"), "Unexpected zip entry " + entry);
             Assertions.assertTrue(expectedFileNames.contains(entry.toString()));
             expectedFileNames.remove(entry.toString());
         }
