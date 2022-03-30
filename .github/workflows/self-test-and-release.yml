@@ -51,7 +51,8 @@ jobs:
           ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r amazon-codeguru-samples -s amazon-codeguru-samples/src/main/java -b amazon-codeguru-samples/build/libs --no-prompt
 
       - name: Validate Findings Linux
-        if: steps.iam-role.outcome == 'success' && ${{env.RUNNER_OS == 'Linux' }}
+        if: steps.iam-role.outcome == 'success'
+        shell: bash
         run: |
           cat code-guru/recommendations.json
           [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq 12 ]] || { echo >&2 "Expected 12 recommendations."; exit 1; }
@@ -60,7 +61,7 @@ jobs:
         if: always()
         run: |
           echo ${{ job.status }} > status_${{ matrix.os }}.txt
-      - name: Upload file status_job02.txt as an artifact
+      - name: Upload file status_${{ matrix.os }}.txt as an artifact
         if: always()
         uses: actions/upload-artifact@v1
         with:
