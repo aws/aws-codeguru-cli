@@ -20,18 +20,19 @@ public class ZipUtilsTest {
         val testDir = Paths.get("test-data/fake-repo");
         val zipName = Files.createTempDirectory("zip-files").resolve("test.zip").toString();
         ZipUtils.pack(Arrays.asList(testDir), testDir, zipName);
-        ZipFile zipFile = new ZipFile(zipName);
-        Enumeration<? extends ZipEntry> entries = zipFile.entries();
-        val expectedFileNames =
-            new HashSet<String>(Arrays.asList("build-dir/should-not-be-included.txt",
-                                              "build-dir/lib/included.txt",
-                                              "should-not-be-included.txt"));
-        while (entries.hasMoreElements()) {
-            ZipEntry entry = entries.nextElement();
-            Assertions.assertFalse(entry.toString().contains("\\"), "Unexpected zip entry " + entry);
-            Assertions.assertTrue(expectedFileNames.contains(entry.toString()));
-            expectedFileNames.remove(entry.toString());
+        try (ZipFile zipFile = new ZipFile(zipName)) {
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            val expectedFileNames =
+                new HashSet<String>(Arrays.asList("build-dir/should-not-be-included.txt",
+                                                  "build-dir/lib/included.txt",
+                                                  "should-not-be-included.txt"));
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                Assertions.assertFalse(entry.toString().contains("\\"), "Unexpected zip entry " + entry);
+                Assertions.assertTrue(expectedFileNames.contains(entry.toString()));
+                expectedFileNames.remove(entry.toString());
+            }
+            Assertions.assertTrue(expectedFileNames.isEmpty());
         }
-        Assertions.assertTrue(expectedFileNames.isEmpty());
     }
 }
