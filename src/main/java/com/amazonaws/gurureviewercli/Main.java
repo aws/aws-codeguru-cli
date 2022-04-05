@@ -121,10 +121,12 @@ public class Main {
                 val sourcePaths = main.sourceDirs.stream()
                                                  .map(Paths::get).map(Path::toAbsolutePath).map(Path::normalize)
                                                  .collect(Collectors.toList());
-                val buildPaths = main.buildDirs.stream()
-                                                .map(Paths::get).map(Path::toAbsolutePath).map(Path::normalize)
-                                                .collect(Collectors.toList());
-                scanMetaData = ScanAdapter.startScan(config, gitMetaData, sourcePaths, buildPaths);
+                List<Path> buildPaths = null;
+                if (main.buildDirs != null) {
+                    buildPaths = main.buildDirs.stream()
+                                               .map(Paths::get).map(Path::toAbsolutePath).map(Path::normalize)
+                                               .collect(Collectors.toList());
+                }                scanMetaData = ScanAdapter.startScan(config, gitMetaData, sourcePaths, buildPaths);
                 results.addAll(ScanAdapter.fetchResults(config, scanMetaData));
             } finally {
                 if (scanMetaData != null) {
