@@ -35,7 +35,7 @@ jobs:
         if: steps.iam-role.outcome == 'success'
         uses: actions/checkout@master
         with:
-          repository: aws-samples/amazon-codeguru-samples
+          repository: aws-samples/amazon-codeguru-reviewer-python-detectors
           ref: "a574f23f6ea3fe607a6d33cc6c8fe28d81ab37a2"
           path: ./python-code
 
