@@ -37,6 +37,7 @@ jobs:
         with:
           repository: aws-samples/amazon-codeguru-reviewer-python-detectors
           ref: "a574f23f6ea3fe607a6d33cc6c8fe28d81ab37a2"
+          fetch-depth: 0 # because we want the history so we can check the diff.
           path: ./python-code
 
       - name: Run Code Guru
