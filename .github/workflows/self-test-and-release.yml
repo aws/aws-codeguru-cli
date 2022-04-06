@@ -48,9 +48,10 @@ jobs:
       - name: Validate Findings Linux
         if: steps.iam-role.outcome == 'success'
         shell: bash
+        env:
+          EXPECTED=15
         run: |
-          cat code-guru/recommendations.json
-          [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq 12 ]] || { echo >&2 "Expected 12 recommendations."; exit 1; }
+          [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations. but got $(grep "filePath" code-guru/recommendations.json | wc -l)."; exit 1; }
 
       - name: Create file status_${{ matrix.os }}.txt and write the job status into it
         if: always()
@@ -109,9 +110,10 @@ jobs:
       - name: Validate Findings Linux
         if: steps.iam-role.outcome == 'success'
         shell: bash
-        run: |
-          cat code-guru/recommendations.json
-          [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq 12 ]] || { echo >&2 "Expected 12 recommendations."; exit 1; }
+        env:
+          EXPECTED=12
+        run: |          
+          [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations but got $(grep "filePath" code-guru/recommendations.json | wc -l)."; exit 1; }
 
       - name: Create file status_${{ matrix.os }}.txt and write the job status into it
         if: always()
