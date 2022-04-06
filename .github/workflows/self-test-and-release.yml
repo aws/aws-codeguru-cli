@@ -49,7 +49,7 @@ jobs:
         if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
-          EXPECTED: 15
+          EXPECTED: 95
         run: |
           [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations. but got $(grep "filePath" code-guru/recommendations.json | wc -l)."; exit 1; }
 
