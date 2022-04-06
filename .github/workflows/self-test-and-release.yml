@@ -39,13 +39,6 @@ jobs:
           ref: "a574f23f6ea3fe607a6d33cc6c8fe28d81ab37a2"
           path: ./python-code
 
-      - name: Build Test Project
-        if: steps.iam-role.outcome == 'success'
-        run: |
-          cd amazon-codeguru-samples
-          ./gradlew
-          cd ..
-
       - name: Run Code Guru
         if: steps.iam-role.outcome == 'success'
         run: |
