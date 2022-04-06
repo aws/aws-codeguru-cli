@@ -49,7 +49,7 @@ jobs:
         if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
-          EXPECTED=15
+          EXPECTED: 15
         run: |
           [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations. but got $(grep "filePath" code-guru/recommendations.json | wc -l)."; exit 1; }
 
@@ -111,7 +111,7 @@ jobs:
         if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
-          EXPECTED=12
+          EXPECTED: 12
         run: |          
           [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations but got $(grep "filePath" code-guru/recommendations.json | wc -l)."; exit 1; }
 
