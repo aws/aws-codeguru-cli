@@ -1,0 +1,7 @@
+version: 1.0
+
+# Sample YAML file
+# https://docs.aws.amazon.com/codeguru/latest/reviewer-ug/welcome.html.
+
+excludeFiles:
+  - "tst/**"

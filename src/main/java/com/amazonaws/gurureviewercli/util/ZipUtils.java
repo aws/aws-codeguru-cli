@@ -65,6 +65,10 @@ public final class ZipUtils {
                             final String zipFilePath) throws IOException {
 
         val files = getFilesInDirectories(sourceDirPaths);
+        val codeGuruConfigFile = relativeRoot.resolve("aws-codeguru-reviewer.yml");
+        if (codeGuruConfigFile != null && codeGuruConfigFile.toFile().isFile()) {
+            files.add(codeGuruConfigFile);
+        }
         packFiles(files, relativeRoot, Paths.get(zipFilePath));
     }
 
