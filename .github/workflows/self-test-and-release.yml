@@ -45,7 +45,7 @@ jobs:
       - name: Run Code Guru
         if: steps.iam-role.outcome == 'success'
         run: |
-          ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r python-code -b ./fake-build-dir --no-prompt -c "c5f9c93d5605bfe3a4de02896a26b7b91eb7c007:a574f23f6ea3fe607a6d33cc6c8fe28d81ab37a2"
+          ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r python-code -b ./fake-build-dir --no-prompt -c "5a0c9579b6c9b0ea7a5f5c1b9328bb7100c7a16e:a574f23f6ea3fe607a6d33cc6c8fe28d81ab37a2"
 
       - name: Upload findings artifact
         if: always()
