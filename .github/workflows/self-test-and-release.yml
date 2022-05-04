@@ -45,7 +45,14 @@ jobs:
         run: |
           ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r python-code --no-prompt -c "c5f9c93d5605bfe3a4de02896a26b7b91eb7c007:a574f23f6ea3fe607a6d33cc6c8fe28d81ab37a2"
 
-      - name: Validate Findings Linux
+      - name: Upload findings artifact
+        if: always()
+        uses: actions/upload-artifact@v1
+        with:
+          name: recommendations_python_${{ matrix.os }}
+          path: code-guru/recommendations.json
+
+      - name: Validate Findings ${{ matrix.os }}
         if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
@@ -70,7 +77,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     name: Self Test on ${{ matrix.os }}
-    steps:    
+    steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
@@ -107,7 +114,14 @@ jobs:
         run: |
           ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r amazon-codeguru-samples -s amazon-codeguru-samples/src/main/java -b amazon-codeguru-samples/build/libs --no-prompt
 
-      - name: Validate Findings Linux
+      - name: Upload findings artifact
+        if: always()
+        uses: actions/upload-artifact@v1
+        with:
+          name: recommendations_java_${{ matrix.os }}
+          path: code-guru/recommendations.json
+
+      - name: Validate Findings ${{ matrix.os }}
         if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
@@ -142,7 +156,7 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: pass_status_windows-latest
-      - name: Set the statuses of the windows and linux job as output parameters
+      - name: Set the statuses of the windows and ${{ matrix.os }} job as output parameters
         id: set_outputs
         run: |
           echo "::set-output name=status_ubuntu-latest::$(<pass_status_ubuntu-latest/status_ubuntu-latest.txt)"
