@@ -214,8 +214,8 @@ public final class ResultsAdapter {
             case LOW:
                 return Result.Level.NOTE.value();
             case MEDIUM:
-                return Result.Level.WARNING.value();
             case HIGH:
+                return Result.Level.WARNING.value();
             case CRITICAL:
                 return Result.Level.ERROR.value();
             default:
