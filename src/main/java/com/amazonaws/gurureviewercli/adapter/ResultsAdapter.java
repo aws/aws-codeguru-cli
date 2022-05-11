@@ -211,11 +211,9 @@ public final class ResultsAdapter {
         }
         switch (recommendation.severity()) {
             case INFO:
-                return Result.Level.NONE.value();
             case LOW:
-                return Result.Level.NONE.value();
+                return Result.Level.NOTE.value();
             case MEDIUM:
-                return Result.Level.NONE.value();
             case HIGH:
                 return Result.Level.WARNING.value();
             case CRITICAL:
