@@ -50,7 +50,7 @@ jobs:
         run: |
           echo "detector,filePath,lineNumber" > summary-of-results.csv
           jq -r '.runs[0].results[] | {ruleId: .ruleId, firstFile: .locations[0].physicalLocation.artifactLocation.uri, firstLine: .locations[0].physicalLocation.region.startLine} | join(",")' \
-            codeguru-results.sarif.json | sort >> summary-of-results.csv
+            code-guru/recommendations.sarif.json | sort >> summary-of-results.csv
           cat summary-of-results.csv
       
       - name: Validate Findings Linux
@@ -120,7 +120,7 @@ jobs:
         run: |
           echo "detector,filePath,lineNumber" > summary-of-results.csv
           jq -r '.runs[0].results[] | {ruleId: .ruleId, firstFile: .locations[0].physicalLocation.artifactLocation.uri, firstLine: .locations[0].physicalLocation.region.startLine} | join(",")' \
-            codeguru-results.sarif.json | sort >> summary-of-results.csv
+            code-guru/recommendations.sarif.json | sort >> summary-of-results.csv
           cat summary-of-results.csv
       
       - name: Validate Findings Linux
