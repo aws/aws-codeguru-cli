@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-    name: Self Test on ${{ matrix.os }}
+    name: Self Test Python on ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
@@ -45,13 +45,21 @@ jobs:
         run: |
           ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r python-code --no-prompt -c "c5f9c93d5605bfe3a4de02896a26b7b91eb7c007:a574f23f6ea3fe607a6d33cc6c8fe28d81ab37a2"
 
+      - name: Print Summary of Findings Linux
+        if: steps.iam-role.outcome == 'success'
+        run: |
+          echo "detector,filePath,lineNumber" > summary-of-results.csv
+          jq -r '.runs[0].results[] | {ruleId: .ruleId, firstFile: .locations[0].physicalLocation.artifactLocation.uri, firstLine: .locations[0].physicalLocation.region.startLine} | join(",")' \
+            code-guru/recommendations.sarif.json | sort >> summary-of-results.csv
+          cat summary-of-results.csv
+      
       - name: Validate Findings Linux
         if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
-          EXPECTED: 95
+          EXPECTED: 112
         run: |
-          [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations. but got $(grep "filePath" code-guru/recommendations.json | wc -l)."; exit 1; }
+          [[ $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations but got $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l)"; exit 1; }
 
       - name: Create file status_${{ matrix.os }}.txt and write the job status into it
         if: always()
@@ -69,7 +77,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-    name: Self Test on ${{ matrix.os }}
+    name: Self Test Java on ${{ matrix.os }}
     steps:    
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
@@ -107,13 +115,21 @@ jobs:
         run: |
           ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r amazon-codeguru-samples -s amazon-codeguru-samples/src/main/java -b amazon-codeguru-samples/build/libs --no-prompt
 
+      - name: Print Summary of Findings Linux
+        if: steps.iam-role.outcome == 'success'
+        run: |
+          echo "detector,filePath,lineNumber" > summary-of-results.csv
+          jq -r '.runs[0].results[] | {ruleId: .ruleId, firstFile: .locations[0].physicalLocation.artifactLocation.uri, firstLine: .locations[0].physicalLocation.region.startLine} | join(",")' \
+            code-guru/recommendations.sarif.json | sort >> summary-of-results.csv
+          cat summary-of-results.csv
+      
       - name: Validate Findings Linux
         if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
-          EXPECTED: 12
-        run: |          
-          [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations but got $(grep "filePath" code-guru/recommendations.json | wc -l)."; exit 1; }
+          EXPECTED: 15
+        run: |
+          [[ $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations but got $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l)"; exit 1; }
 
       - name: Create file status_${{ matrix.os }}.txt and write the job status into it
         if: always()
