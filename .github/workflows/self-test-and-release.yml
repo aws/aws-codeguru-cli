@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-    name: Self Test on ${{ matrix.os }}
+    name: Self Test Python on ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
@@ -54,13 +54,21 @@ jobs:
           name: recommendations_python_${{ matrix.os }}
           path: code-guru/recommendations.json
 
-      - name: Validate Findings ${{ matrix.os }}
+      - name: Print Summary of Findings Linux
+        if: steps.iam-role.outcome == 'success'
+        run: |
+          echo "detector,filePath,lineNumber" > summary-of-results.csv
+          jq -r '.runs[0].results[] | {ruleId: .ruleId, firstFile: .locations[0].physicalLocation.artifactLocation.uri, firstLine: .locations[0].physicalLocation.region.startLine} | join(",")' \
+            code-guru/recommendations.sarif.json | sort >> summary-of-results.csv
+          cat summary-of-results.csv
+      
+      - name: Validate Findings Linux
         if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
-          EXPECTED: 95
+          EXPECTED: 112
         run: |
-          [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations. but got $(grep "filePath" code-guru/recommendations.json | wc -l)."; exit 1; }
+          [[ $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations but got $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l)"; exit 1; }
 
       - name: Create file status_${{ matrix.os }}.txt and write the job status into it
         if: always()
@@ -78,7 +86,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-    name: Self Test on ${{ matrix.os }}
+    name: Self Test Java on ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
@@ -123,13 +131,21 @@ jobs:
           name: recommendations_java_${{ matrix.os }}
           path: code-guru/recommendations.json
 
-      - name: Validate Findings ${{ matrix.os }}
+      - name: Print Summary of Findings Linux
+        if: steps.iam-role.outcome == 'success'
+        run: |
+          echo "detector,filePath,lineNumber" > summary-of-results.csv
+          jq -r '.runs[0].results[] | {ruleId: .ruleId, firstFile: .locations[0].physicalLocation.artifactLocation.uri, firstLine: .locations[0].physicalLocation.region.startLine} | join(",")' \
+            code-guru/recommendations.sarif.json | sort >> summary-of-results.csv
+          cat summary-of-results.csv
+      
+      - name: Validate Findings Linux
         if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
-          EXPECTED: 12
-        run: |          
-          [[ $(grep "filePath" code-guru/recommendations.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations but got $(grep "filePath" code-guru/recommendations.json | wc -l)."; exit 1; }
+          EXPECTED: 15
+        run: |
+          [[ $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations but got $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l)"; exit 1; }
 
       - name: Create file status_${{ matrix.os }}.txt and write the job status into it
         if: always()
