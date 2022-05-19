@@ -162,7 +162,6 @@ class ArtifactAdapterTest {
         // only include files from the util dir.
         val repoDir = Paths.get("./test-data/fake-repo");
         val buildArtifacts = repoDir.resolve("build-dir/lib");
-        final List<Path> buildDirs = Arrays.asList(buildArtifacts);
 
         val config = Configuration.builder()
                                   .s3Client(s3client)
