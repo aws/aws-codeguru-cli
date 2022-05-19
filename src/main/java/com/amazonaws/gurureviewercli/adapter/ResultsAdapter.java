@@ -48,10 +48,10 @@ public final class ResultsAdapter {
                                    final ScanMetaData scanMetaData) throws IOException {
         val jsonFile = outputDir.resolve("recommendations.json");
         JsonUtil.storeRecommendations(results, jsonFile);
-        Log.info("Recommendations in Json format written to to:%n%s", jsonFile.normalize().toUri());
+        Log.info("Recommendations in Json format written to:%n%s", jsonFile.normalize().toUri());
         val sarifFile = outputDir.resolve("recommendations.sarif.json");
         JsonUtil.writeSarif(createSarifReport(results), sarifFile);
-        Log.info("Recommendations in SARIF format written to to:%n%s", sarifFile.normalize().toUri());
+        Log.info("Recommendations in SARIF format written to:%n%s", sarifFile.normalize().toUri());
 
         createHtmlReport(outputDir, scanMetaData, results);
     }
