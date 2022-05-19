@@ -46,11 +46,11 @@ jobs:
           ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r python-code --no-prompt -c "5a0c9579b6c9b0ea7a5f5c1b9328bb7100c7a16e:a574f23f6ea3fe607a6d33cc6c8fe28d81ab37a2"
 
       - name: Upload findings artifact
-        if: always()
+        if: steps.iam-role.outcome == 'success'
         uses: actions/upload-artifact@v1
         with:
           name: recommendations_python_${{ matrix.os }}
-          path: code-guru/recommendations.json
+          path: code-guru/
 
       - name: Print Summary of Findings Linux
         if: steps.iam-role.outcome == 'success'
@@ -123,11 +123,11 @@ jobs:
           ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r amazon-codeguru-samples -s amazon-codeguru-samples/src/main/java -b amazon-codeguru-samples/build/libs --no-prompt
 
       - name: Upload findings artifact
-        if: always()
+        if: steps.iam-role.outcome == 'success'
         uses: actions/upload-artifact@v1
         with:
           name: recommendations_java_${{ matrix.os }}
-          path: code-guru/recommendations.json
+          path: code-guru/
 
       - name: Print Summary of Findings Linux
         if: steps.iam-role.outcome == 'success'
