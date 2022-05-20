@@ -1,7 +1,7 @@
 version: 1.0
 
-# Sample YAML file
-# https://docs.aws.amazon.com/codeguru/latest/reviewer-ug/welcome.html.
+# Sample YAML file to suppress recommendations in test code.
+# https://docs.aws.amazon.com/codeguru/latest/reviewer-ug/recommendation-suppression.html
 
 excludeFiles:
   - "tst/**"
