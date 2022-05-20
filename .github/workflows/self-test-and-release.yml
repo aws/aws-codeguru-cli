@@ -52,7 +52,7 @@ jobs:
           name: recommendations_python_${{ matrix.os }}
           path: code-guru/
 
-      - name: Print Summary of Findings ${{ matrix.os }}
+      - name: Print Summary of Findings on ${{ matrix.os }}
         if: steps.iam-role.outcome == 'success' && matrix.os != 'windows-latest' # cat and jq don't work the same way on windows
         run: |
           echo "detector,filePath,lineNumber" > summary-of-results.csv
@@ -129,8 +129,8 @@ jobs:
           name: recommendations_java_${{ matrix.os }}
           path: code-guru/
 
-      - name: Print Summary of Findings ${{ matrix.os }}
-        if: steps.iam-role.outcome == 'success'
+      - name: Print Summary of Findings on ${{ matrix.os }}
+        if: steps.iam-role.outcome == 'success' && matrix.os != 'windows-latest' # cat and jq don't work the same way on windows
         run: |
           echo "detector,filePath,lineNumber" > summary-of-results.csv
           jq -r '.runs[0].results[] | {ruleId: .ruleId, firstFile: .locations[0].physicalLocation.artifactLocation.uri, firstLine: .locations[0].physicalLocation.region.startLine} | join(",")' \
