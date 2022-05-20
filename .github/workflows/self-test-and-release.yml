@@ -53,8 +53,7 @@ jobs:
           path: code-guru/
 
       - name: Print Summary of Findings ${{ matrix.os }}
-        if: steps.iam-role.outcome == 'success'
-        if: matrix.os != 'windows-latest' # cat and jq don't work the same way on windows
+        if: steps.iam-role.outcome == 'success' && matrix.os != 'windows-latest' # cat and jq don't work the same way on windows
         run: |
           echo "detector,filePath,lineNumber" > summary-of-results.csv
           jq -r '.runs[0].results[] | {ruleId: .ruleId, firstFile: .locations[0].physicalLocation.artifactLocation.uri, firstLine: .locations[0].physicalLocation.region.startLine} | join(",")' \
