@@ -1,0 +1,4 @@
+version: 1.0
+# See https://docs.aws.amazon.com/codeguru/latest/reviewer-ug/recommendation-suppression.html
+excludeFiles:
+  - "tst/**"
