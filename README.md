@@ -5,12 +5,12 @@ receive results. This CLI wraps the [AWS CLI](https://aws.amazon.com/cli/) comma
 in your AWS account. See the [CodeGuru Reviewer pricing](https://aws.amazon.com/codeguru/pricing/) for details.
 
 ### Table of Contents
-[Installation](#installation)
-[Using the CLI](#using-the-cli)
-[Suppressing Recommendations](#suppressing-recommendations)
-[Running from CICD](#running-from-cicd)
-[Security](#security)
-[License](#license)
+- [Installation](#installation)
+- [Using the CLI](#using-the-cli)
+- [Suppressing Recommendations](#suppressing-recommendations)
+- [Running from CICD](#running-from-cicd)
+- [Security](#security)
+- [License](#license)
 
 ## Installation
 

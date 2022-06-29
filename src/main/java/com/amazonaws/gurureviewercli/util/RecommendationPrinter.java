@@ -29,7 +29,8 @@ public final class RecommendationPrinter {
         for (val recommendation : sortedRecommendations) {
             val sb = new StringBuilder();
             sb.append("-----\n");
-            sb.append(String.format("Rule %s with severity %s%n",
+            sb.append(String.format("ID: %s, rule %s with severity %s%n",
+                                    recommendation.recommendationId(),
                                     recommendation.ruleMetadata().ruleId(),
                                     recommendation.severity()));
             sb.append(String.format("In %s line %d%n", recommendation.filePath(), recommendation.startLine()));
