@@ -1,0 +1,10 @@
+version: 1.0
+excludeRecommendations:
+  - detectorId: 'rule01'  # globally suppress rule
+  - detectorId: 'rule02'
+    Locations:
+      - 'src/main/java/com/folder01/File02.java'  # exclude for specific file/folders
+
+excludeFiles:
+  - tst/**
+

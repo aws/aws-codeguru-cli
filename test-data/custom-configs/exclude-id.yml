@@ -1,0 +1,11 @@
+version: 1.0
+
+excludeById:
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+
+excludeFiles:
+  - tst/**
+

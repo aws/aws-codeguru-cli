@@ -1,7 +1,10 @@
 version: 1.0
 
-# Sample YAML file to suppress recommendations in test code.
-# https://docs.aws.amazon.com/codeguru/latest/reviewer-ug/recommendation-suppression.html
+ExcludeById:
+  - 'security-764ea718423ce472134805f16e2616a36c3636fab21927453102041'
+
+ExcludeTags:
+  - 'maintainability'
 
 excludeFiles:
   - "tst/**"
