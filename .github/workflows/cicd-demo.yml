@@ -23,7 +23,7 @@ jobs:
         env:
           VERSION: "0.1.0"
         run: |
-          curl -OL https://github.com/martinschaef/aws-codeguru-cli/releases/download/${VERSION}/aws-codeguru-cli.zip
+          curl -OL https://github.com/martinschaef/aws-codeguru-cli/releases/download/${{VERSION}}/aws-codeguru-cli.zip
           unzip aws-codeguru-cli.zip
           echo "./aws-codeguru-cli/bin" >> $GITHUB_PATH
 
