@@ -188,11 +188,13 @@ jobs:
 
       - name: Get Release Version
         run: |
+          ./gradlew properties -q | grep "version:"
+          ./gradlew properties -q | grep "version:" | awk '{print $2}'
           echo "::set-output name=TAG_NAME::$(./gradlew properties -q | grep "version:" | awk '{print $2}')"
         id: version
 
       - name: Release
-        if: steps.iam-role.outcome == 'success'
+        #if: steps.iam-role.outcome == 'success'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.TAG_NAME }}
