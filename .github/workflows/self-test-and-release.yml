@@ -5,7 +5,7 @@ on: [push, pull_request, workflow_dispatch]
 
 permissions:
     id-token: write
-    contents: read
+    contents: write # write permissions are needed to upload the release
 
 jobs:
   SelfTestPython:
