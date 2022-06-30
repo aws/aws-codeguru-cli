@@ -30,8 +30,6 @@ jobs:
       # Only continue if fetching the AWS credentials was successful.
       - uses: actions/checkout@v2
         if: steps.iam-role.outcome == 'success'
-        with:
-          fetch-depth: 0
       - name: Build project
         if: steps.iam-role.outcome == 'success'
         run: ./gradlew clean installDist
@@ -48,5 +46,5 @@ jobs:
        # if any recommendations are reported.
       - name: Run Code Guru
         if: steps.iam-role.outcome == 'success'
-        run: ./aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r ./ -s ./src/main/java -b ./build/classes/java/main --no-prompt  --fail-on-recommendations
+        run: ./aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r ./ -s ./src/main/java -b ./build/classes/java/main -c "${{ github.event.before }}:${{ github.event.after }}" --no-prompt  --fail-on-recommendations
 

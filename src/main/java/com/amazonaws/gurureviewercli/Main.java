@@ -149,7 +149,7 @@ public class Main {
             }
 
             // try load the
-            val customConfigFile = config.getRootDir().resolve("aws-codeguru-reviewer.yml");
+            val customConfigFile = config.getRootDir().resolve(".codeguru-ignore.yml");
             if (customConfigFile.toFile().isFile()) {
                 Log.info("Using customer provided config: " + customConfigFile.toAbsolutePath());
                 int originalResultsCount = results.size();

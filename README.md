@@ -148,11 +148,11 @@ then trigger a new scan with the CLI where you provide the key.
 
 ## Suppressing Recommendations
 
-The CodeGuru Reviewer CLI searches for a file named `aws-codeguru-reviewer.yml` where users can specify criteria
+The CodeGuru Reviewer CLI searches for a file named `.codeguru-ignore.yml` where users can specify criteria
 based on which recommendations should be suppressed. Suppressed recommendations will not be returned by the CLI,
 but still show up in the AWS console.
 
-The `aws-codeguru-reviewer.yml` file can use any of the filter criteria shown below:
+The `.codeguru-ignore.yml` file can use any of the filter criteria shown below:
 
 ```yaml
 version: 1.0  # The Version field is mandatory. All other fields are optional. 
@@ -189,17 +189,16 @@ ExcludeFiles:
 
 ```
 
-Only the `version` field is mandatory in the `aws-codeguru-reviewer.yml` file. All other entries are optional, and
+Only the `version` field is mandatory in the `.codeguru-ignore.yml` file. All other entries are optional, and
 the CLI will understand any combination of those entries.
 
-An example of such a configuration file can be found [here](https://github.com/aws/aws-codeguru-cli/blob/main/aws-codeguru-reviewer.yml).
+An example of such a configuration file can be found [here](https://github.com/aws/aws-codeguru-cli/blob/main/.codeguru-ignore.yml).
 
 ## Running from CI/CD
 
 You can use this CLI to run CodeGuru from inside your CI/CD pipeline. 
-See [this action](.github/workflows/self-test-and-release.yml#L30-L41) as an example. 
-First, you need credentials for a role with the permissions mentioned above. If you already scanned
-the repository once with the CLI, the S3 bucket has been created, and the you do not need the `s3:CreateBucket*` permission anymore.
+See [this action](.github/workflows/cicd-demo.yml) as an example. To use the CLI in CI/CD, you need working credentials.
+You can use this [CDK template](https://github:com/aws-samples/aws-codeguru-reviewer-cicd-cdk-sample) to set up OIDC credentials for Github Actions.
 
 Then you can run the CLI in non-interactive mode using the `--no-prompt` option, and use the option
 `--fail-on-recommendations` to return a non-zero exit code if recommendations are reported.
@@ -209,6 +208,8 @@ aws-codeguru-cli --region [BUCKET REGION] --no-prompt  --fail-on-recommendations
 ```
 obtain the commit range works differently for different CI/CD providers. For example, GitHub provides the relevant
 commits via environment variables such as `${{ github.event.before }}` and `${{ github.event.after }}`.
+
+An end-to-end example is provided in [this action](.github/workflows/cicd-demo.yml).
 
 ### Build from Source
 
