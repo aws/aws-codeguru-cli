@@ -54,7 +54,7 @@ public final class RecommendationPrinter {
      * @return Integer value for severity, where 0 is the highest.
      */
     public static Integer severityToInt(final RecommendationSummary rs) {
-        if (rs.severity() == null) {
+        if (rs == null || rs.severity() == null) {
             return 5;
         }
         return severityToInt(rs.severity().toString());
