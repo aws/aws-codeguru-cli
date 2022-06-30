@@ -17,15 +17,6 @@ jobs:
         with:
           java-version: 1.8
 
-      # Download a release of the CodeGuru Reviewer CLI.
-      - name: Download CodeGuru Reviewer CLI
-        shell: bash
-        env:
-          VERSION: 0.1.0
-        run: curl -OL "https://github.com/martinschaef/aws-codeguru-cli/releases/download/$VERSION/aws-codeguru-cli.zip"
-      - run: unzip aws-codeguru-cli.zip
-      - run: echo "$(pwd)/aws-codeguru-cli/bin" >> $GITHUB_PATH
-
       # To configure this role, use this CDK example:
       # https://github:com/aws-samples/aws-codeguru-reviewer-cicd-cdk-sample
       - name: Configure AWS credentials
@@ -41,17 +32,25 @@ jobs:
         if: steps.iam-role.outcome == 'success'
         with:
           fetch-depth: 0
-
       - name: Build project
         if: steps.iam-role.outcome == 'success'
         run: ./gradlew clean installDist
+
+      # Download a release of the CodeGuru Reviewer CLI.
+      - name: Download CodeGuru Reviewer CLI
+        shell: bash
+        env:
+          VERSION: 0.1.0
+        run: curl -OL "https://github.com/martinschaef/aws-codeguru-cli/releases/download/$VERSION/aws-codeguru-cli.zip"
+      - run: unzip aws-codeguru-cli.zip
+
 
        # Run CodeGuru Reviewer on the current project and use the --fail-on-recommendations option to fail
        # if any recommendations are reported.
       - name: Run Code Guru
         if: steps.iam-role.outcome == 'success'
         run: |
-          aws-codeguru-cli --region us-west-2 \ 
+          ${HOME}/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 \ 
              -r ./ -s ./src/main/java -b build/classes/java/main \
              --no-prompt --fail-on-recommendations
 
