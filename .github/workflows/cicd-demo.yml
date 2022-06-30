@@ -48,12 +48,5 @@ jobs:
        # if any recommendations are reported.
       - name: Run Code Guru
         if: steps.iam-role.outcome == 'success'
-        run: >
-          ./aws-codeguru-cli/bin/aws-codeguru-cli 
-             --region us-west-2
-             -r ./ 
-             -s ./src/main/java 
-             -b ./build/classes/java/main
-             --no-prompt 
-             --fail-on-recommendations
+        run: ./aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r ./ -s ./src/main/java -b ./build/classes/java/main --no-prompt  --fail-on-recommendations
 
