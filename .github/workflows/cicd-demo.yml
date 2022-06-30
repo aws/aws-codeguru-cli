@@ -44,13 +44,16 @@ jobs:
         run: curl -OL "https://github.com/martinschaef/aws-codeguru-cli/releases/download/$VERSION/aws-codeguru-cli.zip"
       - run: unzip aws-codeguru-cli.zip
 
-
        # Run CodeGuru Reviewer on the current project and use the --fail-on-recommendations option to fail
        # if any recommendations are reported.
       - name: Run Code Guru
         if: steps.iam-role.outcome == 'success'
-        run: |
-          ./aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 \ 
-             -r ./ -s ./src/main/java -b build/classes/java/main \
-             --no-prompt --fail-on-recommendations
+        run: >
+          ./aws-codeguru-cli/bin/aws-codeguru-cli 
+             --region us-west-2
+             -r ./ 
+             -s ./src/main/java 
+             -b ./build/classes/java/main
+             --no-prompt 
+             --fail-on-recommendations
 
