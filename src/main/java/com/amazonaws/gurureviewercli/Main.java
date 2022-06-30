@@ -158,7 +158,6 @@ public class Main {
                 Log.info("%d recommendations were suppressed.", originalResultsCount - results.size());
             }
 
-
             val outputPath = Paths.get(main.outputDir);
             if (!outputPath.toFile().exists()) {
                 if (!outputPath.toFile().mkdirs()) {

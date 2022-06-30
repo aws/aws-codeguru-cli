@@ -61,8 +61,8 @@ public final class RecommendationsFilter {
             if (matchers.stream().anyMatch(m -> m.matches(Paths.get(rec.filePath())))) {
                 continue;
             }
-            if (rec.ruleMetadata() == null) {
-                continue; // Always drop rules without metadata
+            if (rec.ruleMetadata() == null || rec.filePath().equals(".")) {
+                continue; // Always drop rules without metadata or the stats recomendation
             }
             val metaData = rec.ruleMetadata();
             if (metaData.ruleTags() != null && configuration.getExcludeTags() != null) {
