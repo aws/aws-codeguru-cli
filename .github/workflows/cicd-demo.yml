@@ -22,10 +22,9 @@ jobs:
         shell: bash
         env:
           VERSION: 0.1.0
-        run: |
-          curl -OL "https://github.com/martinschaef/aws-codeguru-cli/releases/download/$VERSION/aws-codeguru-cli.zip"
-          unzip aws-codeguru-cli.zip
-          echo "./aws-codeguru-cli/bin" >> $GITHUB_PATH
+        run: curl -OL "https://github.com/martinschaef/aws-codeguru-cli/releases/download/$VERSION/aws-codeguru-cli.zip"
+      - run: unzip aws-codeguru-cli.zip
+      - run: echo "$(pwd)/aws-codeguru-cli/bin" >> $GITHUB_PATH
 
       # To configure this role, use this CDK example:
       # https://github:com/aws-samples/aws-codeguru-reviewer-cicd-cdk-sample
