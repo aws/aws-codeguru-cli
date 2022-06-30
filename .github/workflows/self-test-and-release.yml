@@ -194,7 +194,6 @@ jobs:
         id: version
 
       - name: Release
-        if: steps.iam-role.outcome == 'success'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.TAG_NAME }}
