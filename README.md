@@ -1,6 +1,6 @@
 # CodeGuru Reviewer CLI Wrapper
 Simple CLI wrapper for CodeGuru reviewer that provides a one-line command to scan a local clone of a repository and
-receive results. This CLI wraps the [AWS CLI](https://aws.amazon.com/cli/) commands to communicated with 
+receive results. This CLI wraps the [AWS CLI](https://aws.amazon.com/cli/) commands to communicate with 
 [AWS CodeGuru Reviewer](https://aws.amazon.com/codeguru/). Using CodeGuru Reviewer may generate metering fees
 in your AWS account. See the [CodeGuru Reviewer pricing](https://aws.amazon.com/codeguru/pricing/) for details.
 
@@ -8,7 +8,7 @@ in your AWS account. See the [CodeGuru Reviewer pricing](https://aws.amazon.com/
 - [Installation](#installation)
 - [Using the CLI](#using-the-cli)
 - [Suppressing Recommendations](#suppressing-recommendations)
-- [Running from CICD](#running-from-cicd)
+- [Running from CI/CD](#running-from-cicd)
 - [Security](#security)
 - [License](#license)
 
@@ -16,7 +16,9 @@ in your AWS account. See the [CodeGuru Reviewer pricing](https://aws.amazon.com/
 
 ### Prerequisites
 
-To run the CLI, we need to have a version of git, Java (e.g., [Amazon Corretto](https://aws.amazon.com/corretto/?filtered-posts.sort-by=item.additionalFields.createdDate&filtered-posts.sort-order=desc)) and the [AWS Command Line interface](https://aws.amazon.com/cli/) installed. Verify that both application are installed on our machine by running:
+To run the CLI, we need to have a version of git, Java (e.g., [Amazon Corretto](https://aws.amazon.com/corretto/?filtered-posts.sort-by=item.additionalFields.createdDate&filtered-posts.sort-order=desc)) 
+and the [AWS Command Line interface](https://aws.amazon.com/cli/) installed. 
+Verify that both applications are installed on our machine by running:
 
 ```
 java -version
@@ -82,7 +84,7 @@ export PATH=$PATH:./aws-codeguru-cli/bin
 
 ### Scan an Example
 
-Now, lets download an example project (requires Maven):
+Now, let's download an example project (requires Maven):
 ```
 git clone https://github.com/aws-samples/amazon-codeguru-reviewer-sample-app
 cd amazon-codeguru-reviewer-sample-app
@@ -163,7 +165,7 @@ version: 1.0  # The Version field is mandatory. All other fields are optional.
 ExcludeById:
 - '4d2c43618a2dac129818bef77093730e84a4e139eef3f0166334657503ecd88d'
 
-# We can tell the CLI to exclude all recommendations below a certain severity. This can be useful in CICD integration.
+# We can tell the CLI to exclude all recommendations below a certain severity. This can be useful in CI/CD integration.
 ExcludeBelowSeverity: 'HIGH'
 
 # We can exclude all recommendations that have a certain tag. Available Tags can be found here:

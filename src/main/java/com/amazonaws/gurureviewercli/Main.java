@@ -148,7 +148,6 @@ public class Main {
                 }
             }
 
-            // try load the
             val customConfigFile = config.getRootDir().resolve(".codeguru-ignore.yml");
             if (customConfigFile.toFile().isFile()) {
                 Log.info("Using customer provided config: " + customConfigFile.toAbsolutePath());
@@ -168,6 +167,8 @@ public class Main {
             Log.info("Analysis finished.");
             if (main.failOnRecommendations && !results.isEmpty()) {
                 RecommendationPrinter.print(results);
+                Log.error("Exiting with code 5 because %d recommendations were found and --fail-on-recommendations"
+                         + " is used.", results.size());
                 System.exit(5);
             }
         } catch (GuruCliException e) {

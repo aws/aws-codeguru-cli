@@ -187,10 +187,7 @@ jobs:
         run: ./gradlew clean installDist distZip
 
       - name: Get Release Version
-        run: |
-          ./gradlew properties -q | grep "version:"
-          ./gradlew properties -q | grep "version:" | awk '{print $2}'
-          echo "::set-output name=TAG_NAME::$(./gradlew properties -q | grep "version:" | awk '{print $2}')"
+        run: echo "::set-output name=TAG_NAME::$(./gradlew properties -q | grep "version:" | awk '{print $2}')"
         id: version
 
       - name: Release

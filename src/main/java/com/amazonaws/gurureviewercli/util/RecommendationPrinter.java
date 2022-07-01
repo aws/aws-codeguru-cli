@@ -36,13 +36,7 @@ public final class RecommendationPrinter {
             sb.append(String.format("In %s line %d%n", recommendation.filePath(), recommendation.startLine()));
             sb.append(recommendation.description());
             sb.append("\n");
-            if (severityToInt(recommendation) < 2) {
-                Log.error(sb.toString());
-            } else if (severityToInt(recommendation) == 2) {
-                Log.warn(sb.toString());
-            } else {
-                Log.info(sb.toString());
-            }
+            Log.info(sb.toString());
         }
     }
 
