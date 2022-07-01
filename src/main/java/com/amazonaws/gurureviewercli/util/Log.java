@@ -1,5 +1,8 @@
 package com.amazonaws.gurureviewercli.util;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import org.beryx.textio.TextTerminal;
 import org.beryx.textio.system.SystemTextTerminal;
 
@@ -50,6 +53,10 @@ public final class Log {
 
     public static void error(final Throwable t) {
         terminal.println(TEXT_RED + t.getMessage() + TEXT_RESET);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        t.printStackTrace(pw);
+        terminal.println(sw.toString());
     }
 
     private Log() {

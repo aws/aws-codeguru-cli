@@ -41,7 +41,7 @@ jobs:
         shell: bash
         env:
           VERSION: 0.1.0
-        run: curl -OL "https://github.com/martinschaef/aws-codeguru-cli/releases/download/$VERSION/aws-codeguru-cli.zip"
+        run: curl -OL "https://github.com/aws/aws-codeguru-cli/releases/download/$VERSION/aws-codeguru-cli.zip"
       - run: unzip aws-codeguru-cli.zip
 
        # Run CodeGuru Reviewer on the current project and use the --fail-on-recommendations option to fail

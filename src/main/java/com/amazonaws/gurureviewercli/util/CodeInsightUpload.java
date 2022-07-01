@@ -57,7 +57,7 @@ public final class CodeInsightUpload {
         try {
             uploadBitbucketCodeInsights(report, annotations, "CodeGuruReviewer-01");
         } catch (Exception e) {
-            Log.error("Failed to upload to Bitbucket");
+            Log.error("Failed to upload to Bitbucket %s", e);
             Log.error(e);
         }
     }
