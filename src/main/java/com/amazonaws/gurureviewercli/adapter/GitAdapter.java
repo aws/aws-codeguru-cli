@@ -111,8 +111,10 @@ public final class GitAdapter {
             if (treeWalk.isSubtree()) {
                 treeWalk.enterSubtree();
             } else {
-                val normalizedPath = rootDir.resolve(treeWalk.getPathString()).toRealPath();
-                allFiles.add(normalizedPath);
+                val normalizedFile = rootDir.resolve(treeWalk.getPathString()).toFile().getCanonicalFile();
+                if (normalizedFile.isFile()) {
+                    allFiles.add(normalizedFile.toPath());
+                }
             }
         }
         return allFiles;
