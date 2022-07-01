@@ -49,4 +49,3 @@ jobs:
       - name: Run Code Guru
         if: steps.iam-role.outcome == 'success'
         run: ./aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r ./ -s ./src/main/java -b ./build/classes/java/main -c "${{ github.event.before }}:${{ github.event.after }}" --no-prompt  --fail-on-recommendations
-
