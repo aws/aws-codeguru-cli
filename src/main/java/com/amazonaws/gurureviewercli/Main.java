@@ -36,6 +36,7 @@ import com.amazonaws.gurureviewercli.model.ErrorCodes;
 import com.amazonaws.gurureviewercli.model.GitMetaData;
 import com.amazonaws.gurureviewercli.model.ScanMetaData;
 import com.amazonaws.gurureviewercli.model.configfile.CustomConfiguration;
+import com.amazonaws.gurureviewercli.util.CodeInsightUpload;
 import com.amazonaws.gurureviewercli.util.Log;
 import com.amazonaws.gurureviewercli.util.RecommendationPrinter;
 import com.amazonaws.gurureviewercli.util.RecommendationsFilter;
@@ -68,6 +69,10 @@ public class Main {
                required = false)
     private boolean failOnRecommendations;
 
+    @Parameter(names = {"--bitbucket-code-insights"},
+               description = "Uploads Bitbucket CodeInsights from within a Bitbucket pipeline.",
+               required = false)
+    private boolean bitbucketCodeInsights;
     @Parameter(names = {"--root-dir", "-r"},
                description = "The root directory of the project that should be analyzed.",
                required = true)
@@ -165,6 +170,11 @@ public class Main {
             }
             ResultsAdapter.saveResults(outputPath, results, scanMetaData);
             Log.info("Analysis finished.");
+
+            if (main.bitbucketCodeInsights) {
+                CodeInsightUpload.report(results, scanMetaData);
+            }
+
             if (main.failOnRecommendations && !results.isEmpty()) {
                 RecommendationPrinter.print(results);
                 Log.error("Exiting with code 5 because %d recommendations were found and --fail-on-recommendations"

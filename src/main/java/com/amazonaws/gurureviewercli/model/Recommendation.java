@@ -24,7 +24,7 @@ public class Recommendation {
     private String severity;
 
     @Data
-    static final class RuleMetadata {
+    public static final class RuleMetadata {
         private String ruleId;
         private String ruleName;
         private String shortDescription;
