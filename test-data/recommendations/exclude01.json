@@ -1,0 +1,63 @@
+[ {
+  "filePath" : "src/main/java/com/folder01/File01.java",
+  "recommendationId" : "1",
+  "startLine" : 100,
+  "endLine" : 100,
+  "description" : "",
+  "recommendationCategory" : "AWSBestPractices",
+  "ruleMetadata" : {
+    "ruleId" : "rule01",
+    "ruleName" : "",
+    "shortDescription" : "",
+    "longDescription" : "",
+    "ruleTags" : [ "java", "ignore-me" ]
+  },
+  "severity" : "High"
+}, {
+  "filePath" : "src/main/java/com/folder01/File01.java",
+  "recommendationId" : "2",
+  "startLine" : 200,
+  "endLine" : 200,
+  "description" : "",
+  "recommendationCategory" : "AWSBestPractices",
+  "ruleMetadata" : {
+    "ruleId" : "rule02",
+    "ruleName" : "",
+    "shortDescription" : "",
+    "longDescription" : "",
+    "ruleTags" : [ "java" ]
+  },
+  "severity" : "Medium"
+}, {
+  "filePath" : "src/main/java/com/folder01/File02.java",
+  "recommendationId" : "3",
+  "startLine" : 100,
+  "endLine" : 100,
+  "description" : "",
+  "recommendationCategory" : "AWSBestPractices",
+  "ruleMetadata" : {
+    "ruleId" : "rule01",
+    "ruleName" : "",
+    "shortDescription" : "",
+    "longDescription" : "",
+    "ruleTags" : [ "java" ]
+  },
+  "severity" : "High"
+}, {
+  "filePath" : "src/main/java/com/folder01/File02.java",
+  "recommendationId" : "4",
+  "startLine" : 200,
+  "endLine" : 200,
+  "description" : "",
+  "recommendationCategory" : "AWSBestPractices",
+  "ruleMetadata" : {
+    "ruleId" : "rule02",
+    "ruleName" : "",
+    "shortDescription" : "",
+    "longDescription" : "",
+    "ruleTags" : [ "java" ]
+  },
+  "severity" : "Medium"
+}
+]
+

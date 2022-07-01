@@ -1,11 +1,11 @@
-# Created using https://github.com/aws-samples/aws-codeguru-reviewer-cicd-cdk-sample
+
 name: Self-test and release
 
 on: [push, pull_request, workflow_dispatch]
 
 permissions:
     id-token: write
-    contents: read
+    contents: write # write permissions are needed to upload the release
 
 jobs:
   SelfTestPython:
@@ -141,7 +141,7 @@ jobs:
         if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
-          EXPECTED: 15
+          EXPECTED: 16
         run: |
           [[ $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations but got $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l)"; exit 1; }
 
@@ -187,12 +187,10 @@ jobs:
         run: ./gradlew clean installDist distZip
 
       - name: Get Release Version
-        run: |
-          echo "::set-output name=TAG_NAME::$(./gradlew properties -q | grep "version:" | awk '{print $2}')"
+        run: echo "::set-output name=TAG_NAME::$(./gradlew properties -q | grep "version:" | awk '{print $2}')"
         id: version
 
       - name: Release
-        if: steps.iam-role.outcome == 'success'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.TAG_NAME }}

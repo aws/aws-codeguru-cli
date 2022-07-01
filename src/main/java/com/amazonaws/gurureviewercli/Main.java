@@ -35,7 +35,10 @@ import com.amazonaws.gurureviewercli.model.Configuration;
 import com.amazonaws.gurureviewercli.model.ErrorCodes;
 import com.amazonaws.gurureviewercli.model.GitMetaData;
 import com.amazonaws.gurureviewercli.model.ScanMetaData;
+import com.amazonaws.gurureviewercli.model.configfile.CustomConfiguration;
 import com.amazonaws.gurureviewercli.util.Log;
+import com.amazonaws.gurureviewercli.util.RecommendationPrinter;
+import com.amazonaws.gurureviewercli.util.RecommendationsFilter;
 
 public class Main {
     private static final String REVIEWER_ENDPOINT_PATTERN = "https://codeguru-reviewer.%s.amazonaws.com";
@@ -59,6 +62,11 @@ public class Main {
                description = "Run in non-interactive mode.",
                required = false)
     private boolean noPrompt;
+
+    @Parameter(names = {"--fail-on-recommendations"},
+               description = "Return error code 5 if CodeGuru reports recommendations.",
+               required = false)
+    private boolean failOnRecommendations;
 
     @Parameter(names = {"--root-dir", "-r"},
                description = "The root directory of the project that should be analyzed.",
@@ -140,6 +148,15 @@ public class Main {
                 }
             }
 
+            val customConfigFile = config.getRootDir().resolve(".codeguru-ignore.yml");
+            if (customConfigFile.toFile().isFile()) {
+                Log.info("Using customer provided config: " + customConfigFile.toAbsolutePath());
+                int originalResultsCount = results.size();
+                results = RecommendationsFilter.filterRecommendations(results,
+                                                                      CustomConfiguration.load(customConfigFile));
+                Log.info("%d recommendations were suppressed.", originalResultsCount - results.size());
+            }
+
             val outputPath = Paths.get(main.outputDir);
             if (!outputPath.toFile().exists()) {
                 if (!outputPath.toFile().mkdirs()) {
@@ -148,6 +165,12 @@ public class Main {
             }
             ResultsAdapter.saveResults(outputPath, results, scanMetaData);
             Log.info("Analysis finished.");
+            if (main.failOnRecommendations && !results.isEmpty()) {
+                RecommendationPrinter.print(results);
+                Log.error("Exiting with code 5 because %d recommendations were found and --fail-on-recommendations"
+                         + " is used.", results.size());
+                System.exit(5);
+            }
         } catch (GuruCliException e) {
             Log.error("%s: %s", e.getErrorCode(), e.getMessage());
             e.printStackTrace();

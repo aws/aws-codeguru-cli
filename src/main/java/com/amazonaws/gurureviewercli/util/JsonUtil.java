@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.NonNull;
 import software.amazon.awssdk.services.codegurureviewer.model.RecommendationSummary;
 
@@ -24,10 +25,12 @@ import com.amazonaws.gurureviewercli.model.Recommendation;
 public final class JsonUtil {
 
     private static final ObjectMapper OBJECT_MAPPER =
-        new ObjectMapper().configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
-                          .enable(SerializationFeature.INDENT_OUTPUT)
-                          .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
-                          .setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+        JsonMapper.builder()
+                  .enable(SerializationFeature.INDENT_OUTPUT)
+                  .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+                  .visibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+                  .serializationInclusion(JsonInclude.Include.NON_EMPTY)
+                  .build();
 
     public static List<RecommendationSummary> loadRecommendations(@NonNull final Path jsonFile) throws IOException {
         return OBJECT_MAPPER.readValue(jsonFile.toFile(), new TypeReference<List<Recommendation>>() {

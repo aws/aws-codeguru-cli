@@ -23,7 +23,7 @@ repositories {
 
 defaultTasks 'clean', 'check', 'installDist'
 
-version = '0.0.5'
+version = '0.1.0'
 jar.archiveName = "${jar.baseName}.${jar.extension}"
 distZip.archiveName = "${jar.baseName}.zip"
 
@@ -39,6 +39,7 @@ dependencies {
 
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
     implementation 'com.fasterxml.jackson.core:jackson-core:2.13.0'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0'
 
     implementation 'com.beust:jcommander:1.81'
 

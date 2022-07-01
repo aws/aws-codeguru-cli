@@ -1,12 +1,24 @@
 # CodeGuru Reviewer CLI Wrapper
 Simple CLI wrapper for CodeGuru reviewer that provides a one-line command to scan a local clone of a repository and
-receive results. This CLI wraps the [AWS CLI](https://aws.amazon.com/cli/) commands to communicated with 
+receive results. This CLI wraps the [AWS CLI](https://aws.amazon.com/cli/) commands to communicate with 
 [AWS CodeGuru Reviewer](https://aws.amazon.com/codeguru/). Using CodeGuru Reviewer may generate metering fees
 in your AWS account. See the [CodeGuru Reviewer pricing](https://aws.amazon.com/codeguru/pricing/) for details.
 
+### Table of Contents
+- [Installation](#installation)
+- [Using the CLI](#using-the-cli)
+- [Suppressing Recommendations](#suppressing-recommendations)
+- [Running from CI/CD](#running-from-cicd)
+- [Security](#security)
+- [License](#license)
+
+## Installation
+
 ### Prerequisites
 
-To run the CLI, we need to have a version of git, Java (e.g., [Amazon Corretto](https://aws.amazon.com/corretto/?filtered-posts.sort-by=item.additionalFields.createdDate&filtered-posts.sort-order=desc)) and the [AWS Command Line interface](https://aws.amazon.com/cli/) installed. Verify that both application are installed on our machine by running:
+To run the CLI, we need to have a version of git, Java (e.g., [Amazon Corretto](https://aws.amazon.com/corretto/?filtered-posts.sort-by=item.additionalFields.createdDate&filtered-posts.sort-order=desc)) 
+and the [AWS Command Line interface](https://aws.amazon.com/cli/) installed. 
+Verify that both applications are installed on our machine by running:
 
 ```
 java -version
@@ -15,8 +27,11 @@ aws --version
 git --version
 ```
 
-We will also need working credentials on our machine to interact with our AWS account. Learn more about setting up credentials for AWS here: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html. 
-The credentials must have at least the following permissions:
+We will also need working credentials on our machine to interact with our AWS account. 
+Learn more about setting up credentials for AWS here: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html.
+
+You can always use the CLI with *Admin* credentials but if you want to have a specific role to use the CLI, your
+ credentials must have at least the following permissions:
 
 ```json
 {
@@ -55,17 +70,21 @@ The credentials must have at least the following permissions:
 ```
 
 
-### Download the CLI and scan an Example
+## Using the CLI
 
 You can download the [aws-codeguru-cli](https://github.com/aws/aws-codeguru-cli/releases/latest) from the releases section.
 Download the latest version and add it to your `PATH`:
 ```
-curl -OL https://github.com/aws/aws-codeguru-cli/releases/download/0.0.1/aws-codeguru-cli.zip
+curl -OL https://github.com/aws/aws-codeguru-cli/releases/download/0.1.0/aws-codeguru-cli.zip
 unzip aws-codeguru-cli.zip
 export PATH=$PATH:./aws-codeguru-cli/bin
 ```
 
-Now, lets download an example project (requires Maven):
+
+
+### Scan an Example
+
+Now, let's download an example project (requires Maven):
 ```
 git clone https://github.com/aws-samples/amazon-codeguru-reviewer-sample-app
 cd amazon-codeguru-reviewer-sample-app
@@ -129,18 +148,70 @@ from not using a key to using a key, you need to delete the existing association
 then trigger a new scan with the CLI where you provide the key.
 
 
-### Running from CI/CD
+## Suppressing Recommendations
 
-You can use this CLI to run CodeGuru from inside your CI/CD pipeline. See [this action](.github/workflows/self-test-and-release.yml#L30-L41) as an example. First, you need credentials for a role with the permissions mentioned above. If you already scanned
-the repository once with the CLI, the S3 bucket has been created, and the you do not need the `s3:CreateBucket*` permission anymore.
+The CodeGuru Reviewer CLI searches for a file named `.codeguru-ignore.yml` where users can specify criteria
+based on which recommendations should be suppressed. Suppressed recommendations will not be returned by the CLI,
+but still show up in the AWS console.
 
-Then you can run the CLI in non-interactive mode using the `--no-prompt` option. Further, you can specify a region and 
-AWS profile using the `--region` and `--profile` options as needed:
+The `.codeguru-ignore.yml` file can use any of the filter criteria shown below:
+
+```yaml
+version: 1.0  # The Version field is mandatory. All other fields are optional. 
+
+# The CodeGuru Reviewer CLI produces a recommendations.json file which contains deterministic IDs for each
+# recommendation. This ID can be excluded so that this recommendation will not be reported in future runs of the
+# CLI.
+ExcludeById:
+- '4d2c43618a2dac129818bef77093730e84a4e139eef3f0166334657503ecd88d'
+
+# We can tell the CLI to exclude all recommendations below a certain severity. This can be useful in CI/CD integration.
+ExcludeBelowSeverity: 'HIGH'
+
+# We can exclude all recommendations that have a certain tag. Available Tags can be found here:
+# https://docs.aws.amazon.com/codeguru/detector-library/java/tags/
+# https://docs.aws.amazon.com/codeguru/detector-library/python/tags/
+ExcludeTags:
+  - 'maintainability'
+
+# We can also exclude recommendations by Detector ID. Detector IDs can be found here:
+# https://docs.aws.amazon.com/codeguru/detector-library
+ExcludeRecommendations:
+# Ignore all recommendations for a given Detector ID 
+  - detectorId: 'java/aws-region-enumeration@v1.0'
+# Ignore all recommendations for a given Detector ID in a provided set of locations.
+# Locations can be written as Unix GLOB expressions using wildcard symbols.
+  - detectorId: 'java/aws-region-enumeration@v1.0'
+    Locations:
+      - 'src/main/java/com/folder01/*.java'
+
+# Excludes all recommendations in the provided files. Files can be provided as Unix GLOB expressions.
+ExcludeFiles:
+  - tst/**
+
 ```
-aws-codeguru-cli --region [BUCKET REGION] --no-prompt -r ./ ...
+
+Only the `version` field is mandatory in the `.codeguru-ignore.yml` file. All other entries are optional, and
+the CLI will understand any combination of those entries.
+
+An example of such a configuration file can be found [here](https://github.com/aws/aws-codeguru-cli/blob/main/.codeguru-ignore.yml).
+
+## Running from CI/CD
+
+You can use this CLI to run CodeGuru from inside your CI/CD pipeline. 
+See [this action](.github/workflows/cicd-demo.yml) as an example. To use the CLI in CI/CD, you need working credentials.
+You can use this [CDK template](https://github:com/aws-samples/aws-codeguru-reviewer-cicd-cdk-sample) to set up OIDC credentials for Github Actions.
+
+Then you can run the CLI in non-interactive mode using the `--no-prompt` option, and use the option
+`--fail-on-recommendations` to return a non-zero exit code if recommendations are reported.
+You can specify a region and  AWS profile using the `--region` and `--profile` options as needed:
+```
+aws-codeguru-cli --region [BUCKET REGION] --no-prompt  --fail-on-recommendations -r ./ ...
 ```
 obtain the commit range works differently for different CI/CD providers. For example, GitHub provides the relevant
 commits via environment variables such as `${{ github.event.before }}` and `${{ github.event.after }}`.
+
+An end-to-end example is provided in [this action](.github/workflows/cicd-demo.yml).
 
 ### Build from Source
 
