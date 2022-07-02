@@ -159,9 +159,9 @@ jobs:
   PublishVersion:
     name: Publish Release
     runs-on: ubuntu-latest
-    needs:
-      - SelfTestJava
-      - SelfTestPython
+#    needs:
+#      - SelfTestJava
+#      - SelfTestPython
     steps:
 #      - name: Download artifact pass_status_ubuntu-latest
 #        uses: actions/download-artifact@v1
