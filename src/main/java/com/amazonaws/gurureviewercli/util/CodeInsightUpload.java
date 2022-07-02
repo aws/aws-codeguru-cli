@@ -42,7 +42,7 @@ public final class CodeInsightUpload {
                   .build();
 
     private static final String BITBUCKET_API_PATTERN =
-        "http://api.bitbucket.org/2.0/repositories/%s/commit/%s/reports/%s";
+        "https://api.bitbucket.org/2.0/repositories/%s/commit/%s/reports/%s";
 
     public static void report(final Collection<RecommendationSummary> recommendations,
                               final ScanMetaData scanMetaData) {
