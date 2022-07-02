@@ -68,12 +68,15 @@ public final class CodeInsightUpload {
         final String repoName = System.getenv(ENV_REPO_FULL_NAME);
 
         val endpoint = String.format(BITBUCKET_API_PATTERN, repoName, commit, reportId);
+        Log.info("Using Bitbucket endpoint %s.", endpoint);
         try {
             HttpPut reportPut = new HttpPut(endpoint);
             reportPut.setEntity(new StringEntity(JSON_MAPPER.writeValueAsString(report),
                                                  ContentType.APPLICATION_JSON));
             try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
-                httpclient.execute(new HttpHost("api.bitbucket.org"), reportPut);
+                Log.info("Uploading report summary.");
+                val response = httpclient.execute(new HttpHost("api.bitbucket.org"), reportPut);
+                Log.info(response.toString());
                 uploadAnnotation(endpoint, annotations, httpclient);
             }
         } catch (Exception e) {
@@ -95,7 +98,9 @@ public final class CodeInsightUpload {
                     HttpPost reportPost = new HttpPost(endpoint + "/annotations");
                     reportPost.setEntity(new StringEntity(JSON_MAPPER.writeValueAsString(batch),
                                                           ContentType.APPLICATION_JSON));
-                    httpClient.execute(new HttpHost("api.bitbucket.org"), reportPost);
+                    Log.info("Uploading annotations.");
+                    val response = httpClient.execute(new HttpHost("api.bitbucket.org"), reportPost);
+                    Log.info(response.toString());
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to serialize batch", e);
                 }
