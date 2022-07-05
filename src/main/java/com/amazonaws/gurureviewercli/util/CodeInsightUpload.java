@@ -13,12 +13,16 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.google.common.collect.Lists;
 import lombok.val;
 import org.apache.http.HttpHost;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
+import org.apache.http.util.EntityUtils;
 import software.amazon.awssdk.services.codegurureviewer.model.RecommendationSummary;
 import software.amazon.awssdk.services.codegurureviewer.model.Severity;
 
@@ -71,12 +75,19 @@ public final class CodeInsightUpload {
         Log.info("Using Bitbucket endpoint %s.", endpoint);
         try {
             HttpPut reportPut = new HttpPut(endpoint);
-            reportPut.setEntity(new StringEntity(JSON_MAPPER.writeValueAsString(report),
-                                                 ContentType.APPLICATION_JSON));
-            try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+            val requestBody = JSON_MAPPER.writeValueAsString(report);
+            reportPut.setEntity(new StringEntity(requestBody, ContentType.APPLICATION_JSON));
+
+            HttpHost proxy = new HttpHost("host.docker.internal", 29418);
+            DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
+
+            try (CloseableHttpClient httpclient = HttpClients.custom().setRoutePlanner(routePlanner).build()) {
                 Log.info("Uploading report summary.");
                 val response = httpclient.execute(new HttpHost("api.bitbucket.org"), reportPut);
                 Log.info(response.toString());
+
+                debugRequestResponse(reportPut, requestBody, response);
+
                 uploadAnnotation(endpoint, annotations, httpclient);
             }
         } catch (Exception e) {
@@ -130,5 +141,17 @@ public final class CodeInsightUpload {
             return guruSeverity.toString(); // Bitbucket uses the same severity levels as CodeGuru.
         }
         return "Unknown";
+    }
+
+    private static void debugRequestResponse(HttpEntityEnclosingRequestBase request,
+                                             String requestBody,
+                                             CloseableHttpResponse response) throws IOException {
+        System.out.println("Request URI:" + request.getURI());
+        System.out.println("Request Body -------");
+        System.out.println(requestBody);
+        System.out.println("--------------------");
+        System.out.println("Response Body ------");
+        System.out.println(EntityUtils.toString(response.getEntity(), "UTF-8"));
+        System.out.println("--------------------");
     }
 }
