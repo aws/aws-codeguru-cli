@@ -21,7 +21,6 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
 import org.apache.http.util.EntityUtils;
 import software.amazon.awssdk.services.codegurureviewer.model.RecommendationSummary;
 import software.amazon.awssdk.services.codegurureviewer.model.Severity;
@@ -78,10 +77,7 @@ public final class CodeInsightUpload {
             val requestBody = JSON_MAPPER.writeValueAsString(report);
             reportPut.setEntity(new StringEntity(requestBody, ContentType.APPLICATION_JSON));
 
-            HttpHost proxy = new HttpHost("host.docker.internal", 29418);
-            DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
-
-            try (CloseableHttpClient httpclient = HttpClients.custom().setRoutePlanner(routePlanner).build()) {
+            try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
                 Log.info("Uploading report summary.");
                 val response = httpclient.execute(new HttpHost("api.bitbucket.org"), reportPut);
                 Log.info(response.toString());
