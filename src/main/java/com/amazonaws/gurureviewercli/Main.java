@@ -1,6 +1,7 @@
 package com.amazonaws.gurureviewercli;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
@@ -16,6 +17,7 @@ import com.beust.jcommander.ParameterException;
 import lombok.val;
 import org.beryx.textio.TextIO;
 import org.beryx.textio.system.SystemTextTerminal;
+import org.eclipse.jgit.util.FileUtils;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
@@ -36,7 +38,7 @@ import com.amazonaws.gurureviewercli.model.ErrorCodes;
 import com.amazonaws.gurureviewercli.model.GitMetaData;
 import com.amazonaws.gurureviewercli.model.ScanMetaData;
 import com.amazonaws.gurureviewercli.model.configfile.CustomConfiguration;
-import com.amazonaws.gurureviewercli.util.CodeInsightUpload;
+import com.amazonaws.gurureviewercli.util.CodeInsightExport;
 import com.amazonaws.gurureviewercli.util.Log;
 import com.amazonaws.gurureviewercli.util.RecommendationPrinter;
 import com.amazonaws.gurureviewercli.util.RecommendationsFilter;
@@ -70,9 +72,9 @@ public class Main {
     private boolean failOnRecommendations;
 
     @Parameter(names = {"--bitbucket-code-insights"},
-               description = "Uploads Bitbucket CodeInsights from within a Bitbucket pipeline.",
+               description = "Output directory for Bitbucket insights report and annotation files.",
                required = false)
-    private boolean bitbucketCodeInsights;
+    private String bitbucketCodeInsightsDirectory;
     @Parameter(names = {"--root-dir", "-r"},
                description = "The root directory of the project that should be analyzed.",
                required = true)
@@ -171,8 +173,10 @@ public class Main {
             ResultsAdapter.saveResults(outputPath, results, scanMetaData);
             Log.info("Analysis finished.");
 
-            if (main.bitbucketCodeInsights) {
-                CodeInsightUpload.report(results, scanMetaData);
+            if (main.bitbucketCodeInsightsDirectory != null) {
+                val bitBucketDir = new File(main.bitbucketCodeInsightsDirectory).getCanonicalFile();
+                FileUtils.mkdirs(bitBucketDir, true);
+                CodeInsightExport.report(results, scanMetaData, bitBucketDir.toPath());
             }
 
             if (main.failOnRecommendations && !results.isEmpty()) {

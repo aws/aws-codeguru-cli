@@ -59,9 +59,6 @@ dependencies {
 
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
-    // to upload bitbucket code insights
-    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
-
     implementation("com.google.guava:guava:31.1-jre")
 
     compileOnly 'org.projectlombok:lombok:1.18.22'
