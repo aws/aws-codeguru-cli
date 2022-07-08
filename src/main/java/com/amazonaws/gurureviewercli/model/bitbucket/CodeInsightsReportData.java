@@ -8,6 +8,7 @@ import lombok.extern.log4j.Log4j2;
 
 /**
  * Bitbucket CodeInsight report data.
+ * See https://developer.atlassian.com/cloud/bitbucket/rest/api-group-reports/#api-group-reports
  */
 @Log4j2
 @Builder
