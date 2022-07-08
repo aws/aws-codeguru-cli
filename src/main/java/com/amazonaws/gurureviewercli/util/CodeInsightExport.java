@@ -18,6 +18,9 @@ import com.amazonaws.gurureviewercli.model.ScanMetaData;
 import com.amazonaws.gurureviewercli.model.bitbucket.CodeInsightsAnnotation;
 import com.amazonaws.gurureviewercli.model.bitbucket.CodeInsightsReport;
 
+/**
+ * Export Report and Annotations file for BitBucket CodeInsights.
+ */
 public final class CodeInsightExport {
     private static final String REPORT_FILE_NAME = "report.json";
     private static final String ANNOTATIONS_FILE_NAME = "annotations.json";
