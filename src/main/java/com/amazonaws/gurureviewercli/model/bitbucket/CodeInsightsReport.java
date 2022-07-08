@@ -10,7 +10,28 @@ import lombok.NoArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 /**
- * Bitbucket CodeInsight report.
+ * Bitbucket CodeInsight report format.
+ * Example:
+ * {
+ *     "title": "Amazon CodeGuru Reviewer Scan Report",
+ *     "details": "Some more text.",
+ *     "report_type": "SECURITY",
+ *     "reporter": "Amazon CodeGuru Reviewer",
+ *     "link": "http://www.CodeGuruReviewer.com/reports/001",
+ *     "result": "FAILED",
+ *     "data": [
+ *         {
+ *             "title": "Duration (seconds)",
+ *             "type": "DURATION",
+ *             "value": 14
+ *         },
+ *         {
+ *             "title": "Safe to merge?",
+ *             "type": "BOOLEAN",
+ *             "value": false
+ *         }
+ *     ]
+ * }
  */
 @Log4j2
 @Builder
@@ -25,15 +46,14 @@ public class CodeInsightsReport {
 
     private String result;
 
-    private List<CodeInsightsReportData> data;
+    private String link;
 
-    @JsonProperty("external_id")
-    private String externalId;
+    private List<CodeInsightsReportData> data;
 
     @JsonProperty("reporter")
     private String reporter;
 
     @JsonProperty("report_type")
-    private final String reportType = "Security";
+    private final String reportType = "SECURITY";
 
 }

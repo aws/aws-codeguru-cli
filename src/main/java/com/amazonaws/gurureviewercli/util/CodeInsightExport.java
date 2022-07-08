@@ -34,38 +34,47 @@ public final class CodeInsightExport {
     public static void report(final Collection<RecommendationSummary> recommendations,
                               final ScanMetaData scanMetaData,
                               final Path outputDir) throws IOException {
+        val reportTitle = "CodeGuru Reviewer report";
+        val url = String.format("https://console.aws.amazon.com/codeguru/reviewer?region=%s#/codereviews/details/%s",
+                                scanMetaData.getRegion(), scanMetaData.getCodeReviewArn());
         val report = CodeInsightsReport.builder()
+                                       .title(reportTitle)
                                        .reporter("CodeGuru Reviewer CLI")
-                                       .details("CodeGuru Reviewer " + scanMetaData.getCodeReviewArn())
-                                       .result(recommendations.isEmpty() ? "Passed" : "Failed")
+                                       .details(String.format("CodeGuru Reviewer reported %d recommendations",
+                                                              recommendations.size()))
+                                       .result(recommendations.isEmpty() ? "PASSED" : "FAILED")
+                                       .link(url)
                                        .data(new ArrayList<>())
                                        .build();
-        val annotations = recommendations.stream().map(CodeInsightExport::convert).collect(Collectors.toList());
+
+        val annotations = recommendations.stream().map(r -> convert(r, reportTitle))
+                                         .collect(Collectors.toList());
 
         JSON_MAPPER.writeValue(outputDir.resolve(REPORT_FILE_NAME).toFile(), report);
         JSON_MAPPER.writeValue(outputDir.resolve(ANNOTATIONS_FILE_NAME).toFile(), annotations);
     }
 
-    private static CodeInsightsAnnotation convert(final RecommendationSummary recommendation) {
+    private static CodeInsightsAnnotation convert(final RecommendationSummary recommendation,
+                                                  final String reportTitle) {
         String description = recommendation.recommendationCategoryAsString();
         if (recommendation.ruleMetadata() != null) {
             description = recommendation.ruleMetadata().shortDescription();
         }
 
         return CodeInsightsAnnotation.builder()
+                                     .title(reportTitle)
                                      .externalId(recommendation.recommendationId())
                                      .path(recommendation.filePath())
                                      .line(recommendation.startLine())
                                      .summary(description)
-                                     .annotationType("Vulnerability")
-                                     .details(recommendation.description())
+                                     .annotationType("Vulnerability".toUpperCase())
                                      .severity(convertSeverity(recommendation.severity()))
                                      .build();
     }
 
     private static String convertSeverity(Severity guruSeverity) {
         if (guruSeverity != null) {
-            return guruSeverity.toString(); // Bitbucket uses the same severity levels as CodeGuru.
+            return guruSeverity.toString().toUpperCase(); // Bitbucket uses the same severity levels as CodeGuru.
         }
         return "Unknown";
     }
