@@ -23,7 +23,7 @@ repositories {
 
 defaultTasks 'clean', 'check', 'installDist'
 
-version = '0.1.0'
+version = '0.2.1'
 jar.archiveName = "${jar.baseName}.${jar.extension}"
 distZip.archiveName = "${jar.baseName}.zip"
 
@@ -58,6 +58,8 @@ dependencies {
     implementation 'org.beryx:text-io:3.4.1'
 
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
+
+    implementation("com.google.guava:guava:31.1-jre")
 
     compileOnly 'org.projectlombok:lombok:1.18.22'
     annotationProcessor 'org.projectlombok:lombok:1.18.22'

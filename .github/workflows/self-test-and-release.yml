@@ -59,7 +59,7 @@ jobs:
           jq -r '.runs[0].results[] | {ruleId: .ruleId, firstFile: .locations[0].physicalLocation.artifactLocation.uri, firstLine: .locations[0].physicalLocation.region.startLine} | join(",")' \
             code-guru/recommendations.sarif.json | sort >> summary-of-results.csv
           cat summary-of-results.csv
-      
+
       - name: Validate Findings ${{ matrix.os }}
         if: steps.iam-role.outcome == 'success'
         shell: bash
@@ -136,7 +136,7 @@ jobs:
           jq -r '.runs[0].results[] | {ruleId: .ruleId, firstFile: .locations[0].physicalLocation.artifactLocation.uri, firstLine: .locations[0].physicalLocation.region.startLine} | join(",")' \
             code-guru/recommendations.sarif.json | sort >> summary-of-results.csv
           cat summary-of-results.csv
-      
+
       - name: Validate Findings ${{ matrix.os }}
         if: steps.iam-role.outcome == 'success'
         shell: bash
