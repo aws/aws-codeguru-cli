@@ -9,6 +9,8 @@ import lombok.extern.log4j.Log4j2;
 
 /**
  * Bitbucket CodeInsight annotation.
+ * See https://developer.atlassian.com/cloud/bitbucket/rest/api-group-reports/#api-group-reports
+ *
  * Example
  *     {
  *           "external_id": "CodeGuruReviewer-02-annotation002",

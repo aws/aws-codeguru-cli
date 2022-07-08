@@ -11,6 +11,7 @@ import lombok.extern.log4j.Log4j2;
 
 /**
  * Bitbucket CodeInsight report format.
+ * See See https://developer.atlassian.com/cloud/bitbucket/rest/api-group-reports/#api-group-reports
  * Example:
  * {
  *     "title": "Amazon CodeGuru Reviewer Scan Report",
