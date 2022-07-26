@@ -70,6 +70,8 @@ public final class CodeInsightExport {
                                      .path(recommendation.filePath())
                                      .line(recommendation.startLine())
                                      .summary(description)
+                                     .details("TODO: add details here.")
+                                     .link("https://github.com/martinschaef/aws-codeguru-cli")
                                      .annotationType("Vulnerability".toUpperCase())
                                      .severity(convertSeverity(recommendation.severity()))
                                      .build();
