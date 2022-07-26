@@ -50,7 +50,7 @@ public final class CodeInsightExport {
                                        .data(new ArrayList<>())
                                        .build();
 
-        val annotations = recommendations.stream().map(r -> convert(r, reportTitle))
+        val annotations = recommendations.stream().map(r -> convert(r, reportTitle, url))
                                          .collect(Collectors.toList());
 
         JSON_MAPPER.writeValue(outputDir.resolve(REPORT_FILE_NAME).toFile(), report);
@@ -58,7 +58,8 @@ public final class CodeInsightExport {
     }
 
     private static CodeInsightsAnnotation convert(final RecommendationSummary recommendation,
-                                                  final String reportTitle) {
+                                                  final String reportTitle,
+                                                  final String url) {
         String description = recommendation.recommendationCategoryAsString();
         if (recommendation.ruleMetadata() != null) {
             description = recommendation.ruleMetadata().shortDescription();
@@ -70,8 +71,8 @@ public final class CodeInsightExport {
                                      .path(recommendation.filePath())
                                      .line(recommendation.startLine())
                                      .summary(description)
-                                     .details("TODO: add details here.")
-                                     .link("https://github.com/martinschaef/aws-codeguru-cli")
+                                     .details(recommendation.description())
+                                     .link(url)
                                      .annotationType("Vulnerability".toUpperCase())
                                      .severity(convertSeverity(recommendation.severity()))
                                      .build();
