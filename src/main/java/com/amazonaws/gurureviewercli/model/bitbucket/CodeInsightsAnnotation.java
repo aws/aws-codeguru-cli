@@ -44,4 +44,8 @@ public class CodeInsightsAnnotation {
     private String summary;
 
     private String severity;
+
+    private String details;
+
+    private String link;
 }
