@@ -30,6 +30,10 @@ import com.amazonaws.gurureviewercli.util.Log;
  */
 public final class GitAdapter {
 
+    private static final String GITHUB_UNKNOWN_COMMIT = "0000000000000000000000000000000000000000";
+    // this is the sha for an empty commit, so any diff against this will return the full repo content.
+    private static final String GITHUB_EMPTY_COMMIT_SHA = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
+
     @Nonnull
     public static GitMetaData getGitMetaData(final Configuration config, final Path pathToRepo) throws IOException {
         val gitDir = pathToRepo.toRealPath().resolve(".git");
@@ -122,12 +126,16 @@ public final class GitAdapter {
 
     private static boolean validateCommits(final Configuration config, final Repository repo)
         throws GitAPIException {
+        String beforeCommitSha = config.getBeforeCommit();
+        if (GITHUB_UNKNOWN_COMMIT.equals(config.getBeforeCommit())) {
+            beforeCommitSha = GITHUB_EMPTY_COMMIT_SHA;
+        }
 
-        val beforeTreeIter = treeForCommitId(repo, config.getBeforeCommit());
+        val beforeTreeIter = treeForCommitId(repo, beforeCommitSha);
         val afterTreeIter = treeForCommitId(repo, config.getAfterCommit());
 
         // Resolve git constants, such as HEAD^^ to the actual commit hash
-        config.setBeforeCommit(resolveSha(repo, config.getBeforeCommit()));
+        config.setBeforeCommit(resolveSha(repo, beforeCommitSha));
         config.setAfterCommit(resolveSha(repo, config.getAfterCommit()));
 
         val diffEntries = new Git(repo).diff().setOldTree(beforeTreeIter).setNewTree(afterTreeIter).call();
@@ -135,7 +143,6 @@ public final class GitAdapter {
             throw new GuruCliException(ErrorCodes.GIT_EMPTY_DIFF, String.format("No difference between {} and {}",
                                                                                 beforeTreeIter, afterTreeIter));
         }
-
         return true;
     }
 
