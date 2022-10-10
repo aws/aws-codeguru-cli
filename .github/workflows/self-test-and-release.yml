@@ -64,7 +64,7 @@ jobs:
         if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
-          EXPECTED: 102
+          EXPECTED: 103
         run: |
           [[ $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations but got $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l)"; exit 1; }
 
