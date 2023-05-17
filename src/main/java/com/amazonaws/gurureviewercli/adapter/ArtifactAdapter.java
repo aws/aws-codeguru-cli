@@ -1,25 +1,26 @@
 package com.amazonaws.gurureviewercli.adapter;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
-
-import lombok.val;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-
 import com.amazonaws.gurureviewercli.exceptions.GuruCliException;
 import com.amazonaws.gurureviewercli.model.Configuration;
 import com.amazonaws.gurureviewercli.model.ErrorCodes;
 import com.amazonaws.gurureviewercli.model.ScanMetaData;
 import com.amazonaws.gurureviewercli.util.Log;
 import com.amazonaws.gurureviewercli.util.ZipUtils;
+import lombok.val;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Utility class class to Zip and upload source and build artifacts to S3.
@@ -70,16 +71,16 @@ public final class ArtifactAdapter {
                 Log.info("Adding %d out of %d files under version control in %s",
                          versionedFiles, totalFiles, repositoryDir.toAbsolutePath());
                 filesToScan.addAll(ZipUtils.getFilesInDirectory(repositoryDir.resolve(".git")));
-                sourceKey = zipAndUploadFiles("analysis-src-" + UUID.randomUUID(), filesToScan, repositoryDir,
-                                              bucketName, tempDir, config.getAccountId(), config.getS3Client());
+                sourceKey = zipAndUploadFiles("analysis-src-" + UUID.randomUUID(), filesToScan, buildDirs,
+                        repositoryDir, bucketName, tempDir, config.getAccountId(), config.getS3Client());
             } else {
                 val sourceDirsAndGit = new ArrayList<Path>(sourceDirs);
                 if (config.getBeforeCommit() != null && config.getAfterCommit() != null) {
                     // only add the git folder if a commit range is provided.
                     sourceDirsAndGit.add(repositoryDir.resolve(".git"));
                 }
-                sourceKey = zipAndUploadDir("analysis-src-" + UUID.randomUUID(), sourceDirsAndGit, repositoryDir,
-                                            bucketName, tempDir, config.getAccountId(), config.getS3Client());
+                sourceKey = zipAndUploadDir("analysis-src-" + UUID.randomUUID(), sourceDirsAndGit,
+                        buildDirs, repositoryDir, bucketName, tempDir, config.getAccountId(), config.getS3Client());
             }
             final String buildKey;
             if (buildDirs != null && !buildDirs.isEmpty()) {
@@ -90,7 +91,7 @@ public final class ArtifactAdapter {
                 }
                 buildKey =
                     zipAndUploadDir("analysis-bin-" + UUID.randomUUID(), buildDirs,
-                                    bucketName, tempDir, config.getAccountId(), config.getS3Client());
+                            Collections.emptyList(), bucketName, tempDir, config.getAccountId(), config.getS3Client());
             } else {
                 buildKey = null;
             }
@@ -114,15 +115,17 @@ public final class ArtifactAdapter {
 
     private static String zipAndUploadDir(final String artifactName,
                                           final List<Path> dirNames,
+                                          final List<Path> excludeList,
                                           final String bucketName,
                                           final Path tempDir,
                                           final String accountId,
                                           final S3Client s3Client) throws IOException {
-        return zipAndUploadDir(artifactName, dirNames, null, bucketName, tempDir, accountId, s3Client);
+        return zipAndUploadDir(artifactName, dirNames, excludeList, null, bucketName, tempDir, accountId, s3Client);
     }
 
     private static String zipAndUploadDir(final String artifactName,
                                           final List<Path> dirNames,
+                                          final List<Path> excludeList,
                                           final Path rootDir,
                                           final String bucketName,
                                           final Path tempDir,
@@ -134,9 +137,9 @@ public final class ArtifactAdapter {
             val s3Key = zipFileName;
             if (!zipFile.toFile().isFile()) {
                 if (rootDir != null) {
-                    ZipUtils.pack(dirNames, rootDir, zipFile.toString());
+                    ZipUtils.pack(dirNames, excludeList, rootDir, zipFile.toString());
                 } else {
-                    ZipUtils.pack(dirNames, zipFile.toString());
+                    ZipUtils.pack(dirNames, excludeList, zipFile.toString());
                 }
             }
             val putObjectRequest = PutObjectRequest.builder()
@@ -152,6 +155,7 @@ public final class ArtifactAdapter {
 
     private static String zipAndUploadFiles(final String artifactName,
                                             final List<Path> files,
+                                            final List<Path> excludeDirs,
                                             final Path rootDir,
                                             final String bucketName,
                                             final Path tempDir,
@@ -162,7 +166,7 @@ public final class ArtifactAdapter {
             val zipFile = tempDir.resolve(zipFileName).toAbsolutePath();
             val s3Key = zipFileName;
             if (!zipFile.toFile().isFile()) {
-                ZipUtils.packFiles(files, rootDir, zipFile);
+                ZipUtils.packFiles(files, excludeDirs, rootDir, zipFile);
             }
             val putObjectRequest = PutObjectRequest.builder()
                                                    .bucket(bucketName)
@@ -173,6 +177,11 @@ public final class ArtifactAdapter {
             return s3Key;
         }
         return null;
+    }
+
+    private static List<Path> filterAgainstExcludeDirs(final List<Path> original, final List<Path> exclude) {
+        return original.stream().filter(path -> exclude.stream().anyMatch(ex -> path.startsWith(ex)))
+                .collect(Collectors.toList());
     }
 
     private ArtifactAdapter() {
