@@ -40,7 +40,7 @@ jobs:
       - name: Download CodeGuru Reviewer CLI
         shell: bash
         env:
-          VERSION: 0.2.1
+          VERSION: 0.2.4
         run: curl -OL "https://github.com/aws/aws-codeguru-cli/releases/download/$VERSION/aws-codeguru-cli.zip"
       - run: unzip aws-codeguru-cli.zip
 
