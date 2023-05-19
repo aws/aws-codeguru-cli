@@ -23,7 +23,7 @@ repositories {
 
 defaultTasks 'clean', 'check', 'installDist'
 
-version = '0.2.3'
+version = '0.2.4'
 jar.archiveName = "${jar.baseName}.${jar.extension}"
 distZip.archiveName = "${jar.baseName}.zip"
 
