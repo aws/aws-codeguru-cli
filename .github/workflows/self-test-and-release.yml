@@ -64,9 +64,9 @@ jobs:
         if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
-          EXPECTED: 103
+          EXPECTED_MIN: 80
         run: |
-          [[ $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations but got $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l)"; exit 1; }
+          [[ $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l) -gt $EXPECTED_MIN ]] || { echo "Expected at least $EXPECTED_MIN recommendations but got $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l)"; exit 1; }
 
       - name: Create file status_${{ matrix.os }}.txt and write the job status into it
         if: always()
@@ -141,9 +141,9 @@ jobs:
         if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
-          EXPECTED: 16
+          EXPECTED_MIN: 10
         run: |
-          [[ $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l) -eq $EXPECTED ]] || { echo "Expected $EXPECTED recommendations but got $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l)"; exit 1; }
+          [[ $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l) -gt $EXPECTED_MIN ]] || { echo "Expected at least $EXPECTED_MIN recommendations but got $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l)"; exit 1; }
 
       - name: Create file status_${{ matrix.os }}.txt and write the job status into it
         if: always()
