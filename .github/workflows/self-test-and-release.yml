@@ -175,8 +175,8 @@ jobs:
       - name: Set the statuses of the windows and ${{ matrix.os }} job as output parameters
         id: set_outputs
         run: |
-          echo "::set-output name=status_ubuntu-latest::$(<pass_status_ubuntu-latest/status_ubuntu-latest.txt)"
-          echo "::set-output name=status_windows-latest::$(<pass_status_windows-latest/status_windows-latest.txt)"
+          echo "status_ubuntu-latest=$(<pass_status_ubuntu-latest/status_ubuntu-latest.txt)" >> $GITHUB_OUTPUT
+          echo "status_windows-latest=$(<pass_status_windows-latest/status_windows-latest.txt)" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
@@ -187,7 +187,7 @@ jobs:
         run: ./gradlew clean installDist distZip
 
       - name: Get Release Version
-        run: echo "::set-output name=TAG_NAME::$(./gradlew properties -q | grep "version:" | awk '{print $2}')"
+        run: echo "TAG_NAME=$(./gradlew properties -q | grep "version:" | awk '{print $2}')" >> $GITHUB_OUTPUT
         id: version
 
       - name: Release
