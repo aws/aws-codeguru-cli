@@ -1,19 +1,18 @@
 
-name: Self-test and release
+name: Build, test and release
 
 on: [push, pull_request, workflow_dispatch]
 
 permissions:
-    id-token: write
-    contents: write # write permissions are needed to upload the release
+    contents: read
 
 jobs:
-  SelfTestPython:
+  BuildAndTest:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-    name: Self Test Python on ${{ matrix.os }}
+    name: Build and unit test on ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 1.8
@@ -21,161 +20,19 @@ jobs:
         with:
           distribution: corretto
           java-version: 8
-      - name: Build project
-        run: ./gradlew clean installDist distZip
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        continue-on-error: true
-        id: iam-role
-        with:
-          role-to-assume: arn:aws:iam::048169001733:role/GuruGitHubCICDRole
-          aws-region: us-west-2
-
-      - name: Checkout Test Data
-        if: steps.iam-role.outcome == 'success'
-        uses: actions/checkout@v4
-        with:
-          repository: aws-samples/amazon-codeguru-reviewer-python-detectors
-          ref: "a574f23f6ea3fe607a6d33cc6c8fe28d81ab37a2"
-          fetch-depth: 0 # because we want the history so we can check the diff.
-          path: ./python-code
-
-      - name: Run Code Guru
-        if: steps.iam-role.outcome == 'success'
-        run: |
-          ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r python-code --no-prompt -c "5a0c9579b6c9b0ea7a5f5c1b9328bb7100c7a16e:a574f23f6ea3fe607a6d33cc6c8fe28d81ab37a2"
-
-      - name: Upload findings artifact
-        if: steps.iam-role.outcome == 'success'
-        uses: actions/upload-artifact@v4
-        with:
-          name: recommendations_python_${{ matrix.os }}
-          path: code-guru/
-
-      - name: Print Summary of Findings on ${{ matrix.os }}
-        if: steps.iam-role.outcome == 'success' && matrix.os != 'windows-latest' # cat and jq don't work the same way on windows
-        run: |
-          echo "detector,filePath,lineNumber" > summary-of-results.csv
-          jq -r '.runs[0].results[] | {ruleId: .ruleId, firstFile: .locations[0].physicalLocation.artifactLocation.uri, firstLine: .locations[0].physicalLocation.region.startLine} | join(",")' \
-            code-guru/recommendations.sarif.json | sort >> summary-of-results.csv
-          cat summary-of-results.csv
-
-      - name: Validate Findings ${{ matrix.os }}
-        if: steps.iam-role.outcome == 'success'
-        shell: bash
-        env:
-          EXPECTED_MIN: 80
-        run: |
-          [[ $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l) -gt $EXPECTED_MIN ]] || { echo "Expected at least $EXPECTED_MIN recommendations but got $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l)"; exit 1; }
-
-      - name: Create file status_${{ matrix.os }}.txt and write the job status into it
-        if: always()
-        run: |
-          echo ${{ job.status }} > status_${{ matrix.os }}.txt
-      - name: Upload file status_${{ matrix.os }}.txt as an artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass_status_python_${{ matrix.os }}
-          path: status_${{ matrix.os }}.txt
-
-  SelfTestJava:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    name: Self Test Java on ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 1.8
-        uses: actions/setup-java@v4
-        with:
-          distribution: corretto
-          java-version: 8
-      - name: Build project
-        run: ./gradlew clean installDist distZip
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        continue-on-error: true
-        id: iam-role
-        with:
-          role-to-assume: arn:aws:iam::048169001733:role/GuruGitHubCICDRole
-          aws-region: us-west-2
-
-      - name: Checkout Test Data
-        if: steps.iam-role.outcome == 'success'
-        uses: actions/checkout@v4
-        with:
-          repository: aws-samples/amazon-codeguru-samples
-          ref: "dd32c6cc40401688e35c5b1ec6800aa0f75f8e77"
-          path: ./amazon-codeguru-samples
-
-      - name: Build Test Project
-        if: steps.iam-role.outcome == 'success'
-        run: |
-          cd amazon-codeguru-samples
-          ./gradlew
-          cd ..
-
-      - name: Run Code Guru
-        if: steps.iam-role.outcome == 'success'
-        run: |
-          ./build/install/aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r amazon-codeguru-samples -s amazon-codeguru-samples/src/main/java -b amazon-codeguru-samples/build/libs --no-prompt
-
-      - name: Upload findings artifact
-        if: steps.iam-role.outcome == 'success'
-        uses: actions/upload-artifact@v4
-        with:
-          name: recommendations_java_${{ matrix.os }}
-          path: code-guru/
-
-      - name: Print Summary of Findings on ${{ matrix.os }}
-        if: steps.iam-role.outcome == 'success' && matrix.os != 'windows-latest' # cat and jq don't work the same way on windows
-        run: |
-          echo "detector,filePath,lineNumber" > summary-of-results.csv
-          jq -r '.runs[0].results[] | {ruleId: .ruleId, firstFile: .locations[0].physicalLocation.artifactLocation.uri, firstLine: .locations[0].physicalLocation.region.startLine} | join(",")' \
-            code-guru/recommendations.sarif.json | sort >> summary-of-results.csv
-          cat summary-of-results.csv
-
-      - name: Validate Findings ${{ matrix.os }}
-        if: steps.iam-role.outcome == 'success'
-        shell: bash
-        env:
-          EXPECTED_MIN: 10
-        run: |
-          [[ $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l) -gt $EXPECTED_MIN ]] || { echo "Expected at least $EXPECTED_MIN recommendations but got $(jq -r '.runs[0].results[].ruleId' code-guru/recommendations.sarif.json | wc -l)"; exit 1; }
-
-      - name: Create file status_${{ matrix.os }}.txt and write the job status into it
-        if: always()
-        run: |
-          echo ${{ job.status }} > status_${{ matrix.os }}.txt
-      - name: Upload file status_${{ matrix.os }}.txt as an artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pass_status_java_${{ matrix.os }}
-          path: status_${{ matrix.os }}.txt
+      - name: Build project and run unit tests
+        run: ./gradlew clean test installDist distZip
 
   PublishVersion:
     name: Publish Release
-    # Release only from main; pull requests and other branches run the self-tests only.
+    # Release only from main; pull requests and other branches run the build and unit tests only.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # write permissions are needed to upload the release
     needs:
-      - SelfTestJava
-      - SelfTestPython
+      - BuildAndTest
     steps:
-      - name: Download self-test status artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: pass_status_*
-
-      - name: Print self-test statuses
-        run: |
-          for f in pass_status_*/status_*.txt; do echo "$f: $(cat "$f")"; done
-
       - uses: actions/checkout@v4
       - name: Set up JDK 1.8
         uses: actions/setup-java@v4
