@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.codegurureviewer.model.S3Repository;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import com.amazonaws.gurureviewercli.exceptions.GuruCliException;
 import com.amazonaws.gurureviewercli.model.Configuration;
@@ -29,6 +30,7 @@ import com.amazonaws.gurureviewercli.util.Log;
 public final class AssociationAdapter {
 
     private static final String BUCKET_NAME_PATTERN = "codeguru-reviewer-cli-%s-%s";
+    private static final int HTTP_FORBIDDEN = 403;
     private static final long WAIT_TIME_IN_SECONDS = 1L;
 
     /**
@@ -92,7 +94,12 @@ public final class AssociationAdapter {
             bucketName = String.format(BUCKET_NAME_PATTERN, config.getAccountId(), config.getRegion());
         }
         try {
-            config.getS3Client().headBucket(HeadBucketRequest.builder().bucket(bucketName).build());
+            // Pin the expected owner so a bucket with this (predictable) name that was pre-created in another
+            // account is never adopted. S3 answers 403 when the owner does not match.
+            config.getS3Client().headBucket(HeadBucketRequest.builder()
+                                                             .bucket(bucketName)
+                                                             .expectedBucketOwner(config.getAccountId())
+                                                             .build());
         } catch (NoSuchBucketException e) {
             Log.info("CodeGuru Reviewer requires an S3 bucket to upload the analysis artifacts to.");
             val createBucket =
@@ -109,6 +116,14 @@ public final class AssociationAdapter {
                 throw new GuruCliException(ErrorCodes.USER_ABORT, "CodeGuru needs an S3 bucket to continue.");
             }
 
+        } catch (S3Exception e) {
+            if (e.statusCode() == HTTP_FORBIDDEN) {
+                val msg = String.format("Your %s account does not have permissions to the provided bucket %s. "
+                                        + "Pass --bucket-name with a bucket owned by your account or a bucket "
+                                        + "for which you have permissions.", config.getAccountId(), bucketName);
+                throw new GuruCliException(ErrorCodes.BUCKET_ACCESS_DENIED, msg);
+            }
+            throw e;
         }
 
         val repository = Repository.builder()

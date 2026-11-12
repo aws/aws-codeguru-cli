@@ -23,8 +23,13 @@ import software.amazon.awssdk.services.codegurureviewer.model.RepositoryAssociat
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketResponse;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.gurureviewercli.exceptions.GuruCliException;
@@ -184,5 +189,56 @@ class AssociationAdapterTest {
         GuruCliException ret = Assertions.assertThrows(GuruCliException.class, () ->
             AssociationAdapter.getAssociatedGuruRepo(config));
         Assertions.assertEquals(ErrorCodes.USER_ABORT, ret.getErrorCode());
+    }
+
+    @Test
+    public void test_getAssociatedGuruRepo_headBucketPinsExpectedOwner() {
+        val accountId = "111122223333";
+        val expected = RepositoryAssociation.builder()
+                                            .associationArn("123")
+                                            .state(RepositoryAssociationState.ASSOCIATED)
+                                            .build();
+        when(guruFrontendService.listRepositoryAssociations(any(ListRepositoryAssociationsRequest.class)))
+            .thenReturn(ListRepositoryAssociationsResponse.builder()
+                                                          .repositoryAssociationSummaries(Collections.emptyList())
+                                                          .build());
+        when(s3client.headBucket(any(HeadBucketRequest.class))).thenReturn(HeadBucketResponse.builder().build());
+        when(guruFrontendService.associateRepository(any(AssociateRepositoryRequest.class)))
+            .thenReturn(AssociateRepositoryResponse.builder().repositoryAssociation(expected).build());
+        when(guruFrontendService.describeRepositoryAssociation(any(DescribeRepositoryAssociationRequest.class)))
+            .thenReturn(DescribeRepositoryAssociationResponse.builder().repositoryAssociation(expected).build());
+        val config = Configuration.builder()
+                                  .guruFrontendService(guruFrontendService)
+                                  .interactiveMode(false)
+                                  .s3Client(s3client)
+                                  .accountId(accountId)
+                                  .region("us-east-1")
+                                  .repoName("some-repo-name")
+                                  .build();
+        AssociationAdapter.getAssociatedGuruRepo(config);
+        verify(s3client).headBucket(argThat((HeadBucketRequest r) -> accountId.equals(r.expectedBucketOwner())));
+    }
+
+    @Test
+    public void test_getAssociatedGuruRepo_bucketOwnedByOtherAccountFailsClosed() {
+        when(guruFrontendService.listRepositoryAssociations(any(ListRepositoryAssociationsRequest.class)))
+            .thenReturn(ListRepositoryAssociationsResponse.builder()
+                                                          .repositoryAssociationSummaries(Collections.emptyList())
+                                                          .build());
+        when(s3client.headBucket(any(HeadBucketRequest.class)))
+            .thenThrow(S3Exception.builder().statusCode(403).message("Forbidden").build());
+        val config = Configuration.builder()
+                                  .guruFrontendService(guruFrontendService)
+                                  .interactiveMode(false)
+                                  .s3Client(s3client)
+                                  .accountId("111122223333")
+                                  .region("us-east-1")
+                                  .repoName("some-repo-name")
+                                  .build();
+        GuruCliException ret = Assertions.assertThrows(GuruCliException.class, () ->
+            AssociationAdapter.getAssociatedGuruRepo(config));
+        Assertions.assertEquals(ErrorCodes.BUCKET_ACCESS_DENIED, ret.getErrorCode());
+        verify(s3client, never()).createBucket(any(CreateBucketRequest.class));
+        verify(guruFrontendService, never()).associateRepository(any(AssociateRepositoryRequest.class));
     }
 }

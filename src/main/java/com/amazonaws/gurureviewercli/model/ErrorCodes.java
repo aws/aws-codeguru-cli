@@ -15,6 +15,7 @@ public enum ErrorCodes {
     GIT_EMPTY_DIFF("Git Diff is empty"),
     AWS_INIT_ERROR("Failed to initialize AWS API"),
     BAD_BUCKET_NAME("CodeGuru Reviewer expects bucket names to start with codeguru-reviewer-"),
+    BUCKET_ACCESS_DENIED("No permissions to the provided S3 bucket"),
     USER_ABORT("Abort");
 
     @Getter

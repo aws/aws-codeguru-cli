@@ -147,9 +147,11 @@ public class Main {
                 if (scanMetaData != null) {
                     // try to clean up objects from S3.
                     main.tryDeleteS3Object(config.getS3Client(),
+                                           config.getAccountId(),
                                            scanMetaData.getBucketName(),
                                            scanMetaData.getSourceKey());
                     main.tryDeleteS3Object(config.getS3Client(),
+                                           config.getAccountId(),
                                            scanMetaData.getBucketName(),
                                            scanMetaData.getBuildKey());
                 }
@@ -250,10 +252,15 @@ public class Main {
         config.setKeyId(this.kmsKeyId);
     }
 
-    private void tryDeleteS3Object(final S3Client s3Client, final String s3Bucket, final String s3Key) {
+    private void tryDeleteS3Object(final S3Client s3Client, final String accountId,
+                                   final String s3Bucket, final String s3Key) {
         try {
             if (s3Key != null) {
-                s3Client.deleteObject(DeleteObjectRequest.builder().bucket(s3Bucket).key(s3Key).build());
+                s3Client.deleteObject(DeleteObjectRequest.builder()
+                                                         .bucket(s3Bucket)
+                                                         .key(s3Key)
+                                                         .expectedBucketOwner(accountId)
+                                                         .build());
             }
         } catch (Exception e) {
             Log.warn("Failed to delete %s from %s. Please delete the object by hand.", s3Key, s3Bucket);
