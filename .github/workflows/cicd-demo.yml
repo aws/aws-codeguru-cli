@@ -1,6 +1,8 @@
 name: Demo of how to use a CodeGuru Reviewer CLI release in CICD.
 
-on: [ push, pull_request, workflow_dispatch ]
+# Example only: run it by hand. The role below is in an AWS account that is no longer in use,
+# so every step after "Configure AWS credentials" is skipped. Replace the role with one in your own account.
+on: [ workflow_dispatch ]
 
 permissions:
   id-token: write
@@ -38,14 +40,24 @@ jobs:
 
       # Download a release of the CodeGuru Reviewer CLI.
       - name: Download CodeGuru Reviewer CLI
+        if: steps.iam-role.outcome == 'success'
         shell: bash
         env:
-          VERSION: 0.2.4
+          VERSION: 0.2.5
         run: curl -OL "https://github.com/aws/aws-codeguru-cli/releases/download/$VERSION/aws-codeguru-cli.zip"
-      - run: unzip aws-codeguru-cli.zip
+      - if: steps.iam-role.outcome == 'success'
+        run: unzip aws-codeguru-cli.zip
 
        # Run CodeGuru Reviewer on the current project and use the --fail-on-recommendations option to fail
        # if any recommendations are reported.
+      # On push, review only the pushed commits. A manual run has no commit range, so it reviews the whole repository.
       - name: Run Code Guru
         if: steps.iam-role.outcome == 'success'
-        run: ./aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r ./ -s ./src/main/java -b ./build/classes/java/main -c "${{ github.event.before }}:${{ github.event.after }}" --no-prompt  --fail-on-recommendations
+        shell: bash
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.event.after }}
+        run: |
+          RANGE=()
+          if [ -n "$BEFORE" ] && [ -n "$AFTER" ]; then RANGE=(-c "$BEFORE:$AFTER"); fi
+          ./aws-codeguru-cli/bin/aws-codeguru-cli --region us-west-2 -r ./ -s ./src/main/java -b ./build/classes/java/main "${RANGE[@]}" --no-prompt --fail-on-recommendations
